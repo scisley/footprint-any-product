@@ -6,7 +6,7 @@ import uuid # Import uuid for type hinting/clarity
 # --- Configuration ---
 # Replace with the actual base URL provided by Muir.ai
 # Example: BASE_URL = "https://api.muir.ai"
-BASE_URL = "YOUR_MUIR_API_BASE_URL"
+BASE_URL = "https://YOUR_MUIR_API_BASE_URL" # Added https://
 
 # Your API Key should be stored in an environment variable for security.
 # Set the environment variable MUIR_API_KEY before running this script.
