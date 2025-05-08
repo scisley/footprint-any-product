@@ -25,6 +25,7 @@ from state import FootprintState
 from agents.planner import planner_phase
 from agents.eol import eol_phase
 from agents.materials import materials_phase
+from agents.manufacturing import manufacturing_phase
 from agents.packaging import packaging_phase
 from agents.transportation import transportation_phase
 from agents.use import use_phase
@@ -105,132 +106,9 @@ def setup_graph() -> Any:
     graph_builder.add_node("planner_phase", planner_phase)
     graph_builder.add_edge(START, "planner_phase")
     
-    # Define materials phase example
-    async def materials_phase_example(state: FootprintState) -> Dict[str, Any]:
-        """Example of materials analysis with ReAct formatting."""
-        await asyncio.sleep(0.3)
-        
-        # Simulate materials phase analysis messages
-        messages = [
-            {"role": "ai", "content": "Thought: I need to identify the major materials in this product."},
-            {"role": "ai", "content": "Action: emissions_factor_finder_tool(\"aluminum production\")"},
-            {"role": "ai", "content": "Observation: Found emissions factor of 8.14 kg CO2e per kg of aluminum production."},
-            {"role": "ai", "content": "Thought: An iPhone typically contains about 0.03 kg of aluminum in the body."},
-            {"role": "ai", "content": "Action: calculator(\"8.14 * 0.03\")"},
-            {"role": "ai", "content": "Observation: The result is 0.2442"},
-            {"role": "ai", "content": "Thought: Now checking for glass and plastic components."},
-            {"role": "ai", "content": "Action: emissions_factor_finder_tool(\"glass production\")"},
-            {"role": "ai", "content": "Observation: Found emissions factor of 0.85 kg CO2e per kg of glass production."},
-            {"role": "ai", "content": "Action: calculator(\"0.85 * 0.02\")"},
-            {"role": "ai", "content": "Observation: The result is 0.017"},
-            {"role": "ai", "content": "Thought: Total materials footprint: 0.2442 + 0.017 = 0.2612 kg CO2e"}
-        ]
-        
-        return {
-            "materials": {
-                "carbon": 0.26,
-                "summary": "Materials analysis shows impacts from aluminum (0.244 kg CO2e) and glass (0.017 kg CO2e) components.",
-                "messages": messages
-            }
-        }
-    
-    # Define manufacturing phase node (enhanced example with proper tool usage)
-    async def manufacturing_phase(state: FootprintState) -> Dict[str, Any]:
-        """
-        Analyzes the manufacturing impacts of the product.
-        
-        In a real implementation, this would use an LLM agent to analyze the product details
-        and estimate carbon footprint. This example shows the expected format of messages.
-        """
-        # Small delay to simulate processing time
-        await asyncio.sleep(0.5)
-        
-        # Create message list that includes the LLM's ReAct thought process
-        messages = [
-            {"role": "ai", "content": "Thought: I need to analyze the manufacturing process for this product."},
-            {"role": "ai", "content": "Action: emissions_factor_finder_tool(\"manufacturing electronics\")"}, 
-            {"role": "ai", "content": "Observation: Found emissions factor of 2.3 kg CO2e per kg of electronics manufacturing."},
-            {"role": "ai", "content": "Thought: Now I need to calculate the total based on product weight."},
-            {"role": "ai", "content": "Action: calculator(\"2.3 * 1.8\")"},
-            {"role": "ai", "content": "Observation: The result is 4.14"},
-            {"role": "ai", "content": "Thought: I also need to account for raw material extraction."},
-            {"role": "ai", "content": "Action: emissions_factor_finder_tool(\"aluminum extraction\")"},
-            {"role": "ai", "content": "Observation: Found emissions factor of 0.48 kg CO2e per kg of aluminum extraction."},
-            {"role": "ai", "content": "Action: calculator(\"0.48 * 1.8\")"},
-            {"role": "ai", "content": "Observation: The result is 0.864"},
-            {"role": "ai", "content": "Thought: Adding manufacturing and material extraction: 4.14 + 0.864 = 5.004 kg CO2e"}
-        ]
-        
-        # Return the data in the format expected by the FootprintState
-        return {
-            "manufacturing": {
-                "carbon": 5.0, 
-                "summary": "Manufacturing carbon footprint includes extraction of raw materials (0.86 kg CO2e) and assembly/factory energy (4.14 kg CO2e).", 
-                "messages": messages
-            }
-        }
-    
-    # Define packaging phase example (similar to manufacturing but with packaging focus)
-    async def packaging_phase_example(state: FootprintState) -> Dict[str, Any]:
-        """Example of packaging analysis with ReAct formatting."""
-        await asyncio.sleep(0.3)
-        
-        # Simulate packaging phase analysis messages
-        messages = [
-            {"role": "ai", "content": "Thought: I need to determine the packaging materials for this product."},
-            {"role": "ai", "content": "Action: emissions_factor_finder_tool(\"cardboard packaging\")"},
-            {"role": "ai", "content": "Observation: Found emissions factor of 0.98 kg CO2e per kg of cardboard packaging."},
-            {"role": "ai", "content": "Thought: Estimating typical iPhone packaging weight at 0.2 kg."},
-            {"role": "ai", "content": "Action: calculator(\"0.98 * 0.2\")"},
-            {"role": "ai", "content": "Observation: The result is 0.196"},
-            {"role": "ai", "content": "Thought: Also need to account for plastic inserts and printed materials."},
-            {"role": "ai", "content": "Action: emissions_factor_finder_tool(\"plastic packaging\")"},
-            {"role": "ai", "content": "Observation: Found emissions factor of 2.7 kg CO2e per kg of plastic packaging."},
-            {"role": "ai", "content": "Action: calculator(\"2.7 * 0.05\")"},
-            {"role": "ai", "content": "Observation: The result is 0.135"},
-            {"role": "ai", "content": "Thought: Total packaging footprint: 0.196 + 0.135 = 0.331 kg CO2e"}
-        ]
-        
-        return {
-            "packaging": {
-                "carbon": 0.33,
-                "summary": "Packaging analysis shows impacts from cardboard (0.196 kg CO2e) and plastic elements (0.135 kg CO2e).",
-                "messages": messages
-            }
-        }
-    
-    # Define transportation phase example 
-    async def transportation_phase_example(state: FootprintState) -> Dict[str, Any]:
-        """Example of transportation analysis with ReAct formatting."""
-        await asyncio.sleep(0.4)
-        
-        # Simulate transportation phase analysis messages
-        messages = [
-            {"role": "ai", "content": "Thought: I need to analyze the transportation footprint for this product."},
-            {"role": "ai", "content": "Action: emissions_factor_finder_tool(\"ocean freight transport\")"},
-            {"role": "ai", "content": "Observation: Found emissions factor of 0.015 kg CO2e per ton-km for ocean freight."},
-            {"role": "ai", "content": "Thought: Assuming production in China and shipping to US (approx. 10,000 km)."},
-            {"role": "ai", "content": "Action: calculator(\"0.015 * 10000 * 0.002\")"},
-            {"role": "ai", "content": "Observation: The result is 0.3"},
-            {"role": "ai", "content": "Thought: Also need to account for trucking from port to distribution centers."},
-            {"role": "ai", "content": "Action: emissions_factor_finder_tool(\"truck transport\")"},
-            {"role": "ai", "content": "Observation: Found emissions factor of 0.062 kg CO2e per ton-km for trucking."},
-            {"role": "ai", "content": "Action: calculator(\"0.062 * 500 * 0.002\")"},
-            {"role": "ai", "content": "Observation: The result is 0.062"},
-            {"role": "ai", "content": "Thought: Total transportation footprint: 0.3 + 0.062 = 0.362 kg CO2e"}
-        ]
-        
-        return {
-            "transportation": {
-                "carbon": 0.36,
-                "summary": "Transportation emissions include ocean freight (0.3 kg CO2e) and trucking (0.062 kg CO2e).",
-                "messages": messages
-            }
-        }
-    
     # Add all agent nodes to the graph
-    graph_builder.add_node("materials_phase", materials_phase)  # Use the real materials agent
-    graph_builder.add_node("manufacturing_phase", manufacturing_phase)
+    graph_builder.add_node("materials_phase", materials_phase)
+    graph_builder.add_node("manufacturing_phase", manufacturing_phase) # Uses imported manufacturing_phase
     graph_builder.add_node("packaging_phase", packaging_phase)
     graph_builder.add_node("transportation_phase", transportation_phase)
     graph_builder.add_node("use_phase", use_phase)
