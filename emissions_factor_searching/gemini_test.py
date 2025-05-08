@@ -1,6 +1,5 @@
 import os
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 
 # Import Client and types are not needed here, access via genai alias
 
