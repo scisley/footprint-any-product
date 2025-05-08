@@ -1,8 +1,10 @@
+import os
 from google import genai
 from google.genai import types
 
 # Import Client and types are not needed here, access via genai alias
 
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 client = genai.Client() # Access Client via the genai alias
 
 response = client.models.generate_content(
