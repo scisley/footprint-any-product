@@ -4,14 +4,12 @@ import { useState } from 'react';
 import { ProductInputProps, ProductInputData } from '@/types/components';
 
 export function ProductInput({ onSubmit, isLoading = false }: ProductInputProps) {
-  const [brand, setBrand] = useState('Apple');
-  const [category, setCategory] = useState('cellphone');
-  const [description, setDescription] = useState('An Apple iPhone 15 Pro');
+  const [productUrl, setProductUrl] = useState('https://www.apple.com/iphone-15-pro/');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (brand.trim() && category.trim() && description.trim() && !isLoading) {
-      onSubmit({ brand: brand.trim(), category: category.trim(), description: description.trim() });
+    if (productUrl.trim() && !isLoading) {
+      onSubmit({ url: productUrl.trim() });
     }
   };
 
@@ -19,55 +17,23 @@ export function ProductInput({ onSubmit, isLoading = false }: ProductInputProps)
     <div className="w-full max-w-3xl mx-auto">
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <h2 className="text-xl font-semibold">Enter Product Details</h2>
+          <h2 className="text-xl font-semibold">Enter Product URL</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Provide the brand, category, and a brief description of the product for analysis.
+            Provide the URL of the product page for analysis.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
           <div>
-            <label htmlFor="product-brand" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Brand
+            <label htmlFor="product-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Product URL
             </label>
             <input
-              id="product-brand"
-              type="text"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              placeholder="e.g., Apple, Nike, Patagonia"
-              className="w-full px-4 py-3 rounded-lg border border-[var(--border)] bg-background focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-              disabled={isLoading}
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="product-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Category
-            </label>
-            <input
-              id="product-category"
-              type="text"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="e.g., Smartphone, Running Shoe, T-shirt"
-              className="w-full px-4 py-3 rounded-lg border border-[var(--border)] bg-background focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-              disabled={isLoading}
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="product-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Description
-            </label>
-            <input
-              id="product-description"
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., iPhone 15 Pro 256GB, Air Zoom Pegasus 40, Men's Cotton Crew Neck"
+              id="product-url"
+              type="url"
+              value={productUrl}
+              onChange={(e) => setProductUrl(e.target.value)}
+              placeholder="e.g., https://www.example.com/product-page"
               className="w-full px-4 py-3 rounded-lg border border-[var(--border)] bg-background focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
               disabled={isLoading}
               required
@@ -78,7 +44,7 @@ export function ProductInput({ onSubmit, isLoading = false }: ProductInputProps)
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={!brand.trim() || !category.trim() || !description.trim() || isLoading}
+            disabled={!productUrl.trim() || isLoading}
             className="px-6 py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors sm:w-auto w-full"
           >
             {isLoading ? (

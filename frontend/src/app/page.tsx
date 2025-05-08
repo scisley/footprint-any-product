@@ -8,18 +8,14 @@ import { ProductInputData } from '@/types/components';
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [productBrand, setProductBrand] = useState('');
-  const [productCategory, setProductCategory] = useState('');
-  const [productDescription, setProductDescription] = useState('');
+  const [productUrlValue, setProductUrlValue] = useState(''); // Renamed to avoid conflict with FootprintAnalysis prop
   const webSocketUrl = 'ws://localhost:3005/ws';
 
   const handleSubmit = (input: ProductInputData) => {
     console.log('[Home Page] handleSubmit called with input:', input);
-    setProductBrand(input.brand);
-    setProductCategory(input.category);
-    setProductDescription(input.description);
-    setIsAnalyzing(true); // This should trigger the re-render and effect in StreamingText
-    console.log('[Home Page] State after handleSubmit: isAnalyzing=true, brand=', input.brand, 'category=', input.category, 'description=', input.description);
+    setProductUrlValue(input.url);
+    setIsAnalyzing(true);
+    console.log('[Home Page] State after handleSubmit: isAnalyzing=true, productUrl=', input.url);
   };
 
   const handleAnalysisComplete = () => {
@@ -57,11 +53,9 @@ export default function Home() {
         />
         
         <FootprintAnalysis
-          url={webSocketUrl}
+          url={webSocketUrl} // This is the WebSocket URL
           isStreaming={isAnalyzing}
-          brand={productBrand}
-          category={productCategory}
-          description={productDescription}
+          productUrl={productUrlValue} // This is the product URL
           onStreamingComplete={handleAnalysisComplete}
         />
       </main>
