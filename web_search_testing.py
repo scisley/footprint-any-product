@@ -53,8 +53,8 @@ tools = [
 
 if __name__ == "__main__":
     messages = [
-        {"role": "system", "content": "You are a helpful assistant. Use the available tools to answer questions that require up-to-date information or external knowledge."},
-        {"role": "user", "content": "What is the current population of the world?"}
+        {"role": "system", "content": "You are a helpful assistant. You have access to a web search tool. Use the `perform_web_search` tool whenever the user asks a question that requires up-to-date information or external knowledge that you might not have, such as current statistics or recent events."},
+        {"role": "user", "content": "What is the *current* population of the world? Please use your search tool to find the most recent estimate."}
     ]
 
     # First call to the model
