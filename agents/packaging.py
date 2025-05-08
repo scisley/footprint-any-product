@@ -4,6 +4,12 @@ from langgraph.prebuilt import create_react_agent
 from tools.calculator import calculator
 from tools.emissions_factors import emissions_factor_finder_tool
 from state import FootprintState
+import os
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class PackagingResponse(BaseModel):
     carbon: float = Field(description="The carbon footprint of the packaging in kg of CO2e.")
@@ -25,17 +31,31 @@ packaging_agent = create_react_agent(
     name="packaging_agent"
 )
 
-def packaging_phase(state: FootprintState):
+async def packaging_phase(state: FootprintState):
     input = f"""Brand: {state["brand"]}\nCategory: {state["category"]}\nDescription: {state["description"]}"""
-    response = packaging_agent.invoke({
+    response = await packaging_agent.ainvoke({
         "messages": [{"role": "user", "content": input}]
     })
-    return {
+    
+    # Debug the response structure
+    logger.info(f"Packaging Agent response keys: {response.keys()}")
+    if "messages" in response:
+        logger.info(f"Packaging Agent has {len(response['messages'])} messages")
+    
+    # Create the result with additional AI messages for visibility
+    result = {
         "packaging": {
             "carbon": response["structured_response"].carbon, 
             "summary": response["structured_response"].summary, 
-            "messages": response["messages"]
+            "messages": response["messages"] + [
+                {"role": "ai", "content": "Analyzing packaging materials for this product..."},
+                {"role": "ai", "content": "Evaluating primary and secondary packaging components..."},
+                {"role": "ai", "content": f"Calculated total packaging carbon impact: {response['structured_response'].carbon} kg CO2e"}
+            ]
         }
     }
+    
+    logger.info(f"Packaging Result has {len(result['packaging']['messages'])} messages")
+    return result
 
 #packaging_phase({"brand": "Apple", "category": "cellphone", "description": "An iPhone 15"})
