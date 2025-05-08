@@ -30,25 +30,24 @@ def perform_web_search(query: str) -> str:
     return response.output_text
 
 # Define the tool schema for the o3-2025-04-16 model
+# Define the tool schema for the o3-2025-04-16 model
 tools = [
     {
         "type": "function",
-        "function": {
-            "name": "perform_web_search",
-            "description": "Performs a web search to find information online.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "The search query."
-                    }
-                },
-                "required": ["query"],
-                "additionalProperties": False
+        "name": "perform_web_search", # Moved name here
+        "description": "Performs a web search to find information online.", # Moved description here
+        "parameters": { # Moved parameters here
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The search query."
+                }
             },
-            "strict": True # Recommended for reliable function calls
-        }
+            "required": ["query"],
+            "additionalProperties": False
+        },
+        "strict": True # Moved strict here - Recommended for reliable function calls
     }
 ]
 
