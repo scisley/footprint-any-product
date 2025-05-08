@@ -8,15 +8,23 @@ import utils
 import re
 from langchain.schema import HumanMessage
 from langchain_openai import ChatOpenAI
+import yaml
+from pathlib import Path
 
 utils.load_environment()
 api_key = os.environ["FIRECRAWL_API_KEY"]
 image_link_regex = r"https?://\S+\.(?:jpg|jpeg|png|gif|svg)(?:\?[\w=&]*)?"
-image_question = '''Extract all image urls from the following markdown, making sure to avoid small icons and logos, and only include the images that pertain to the main product on the page, rather than images of recommended or similar products in other components of the page. Prefer larger images (over 1kb), prefer to be stricter and only keep 1-2 images with white-only backgrounds if possible, rather than keeping too many or images with complex backgrounds. Return the result as a space-delimited list of image_urls and nothing else.'''
-brand_question = "What is the brand of the product in the markdown below? Return only the simple brand name, not a description of the product. Return just the brand, no other text."
-category_question = "What is the category of the product in the markdown below, in very simple terms, that don't include the brand or very descriptive details? For example, a bike, t-shirt, office chair, or notebook, rather than something more specific like a blue notebook or an ergonomic office chair. Return just the category, no other text."
-short_description_question = "What is a very brief description of the product in the markdown below? Return a single sentence, no more than 20 words, and make sure it actually describes the product and what it might be used for."
-long_description_question = "Extract all product details in the markdown below that are relevant to the main product on this page. Ignore descriptions or details for secondary products like recommendations or related products."
+
+# Load prompts from YAML
+_PROMPTS_FILE = Path(__file__).parent / "prompts.yaml"
+with open(_PROMPTS_FILE, 'r') as f:
+    _prompts_data = yaml.safe_load(f)
+
+image_question = _prompts_data['page_analysis_image_question']
+brand_question = _prompts_data['page_analysis_brand_question']
+category_question = _prompts_data['page_analysis_category_question']
+short_description_question = _prompts_data['page_analysis_short_description_question']
+long_description_question = _prompts_data['page_analysis_long_description_question']
 
 llm = ChatOpenAI(model_name="gpt-4o-mini")
 
