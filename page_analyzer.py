@@ -7,12 +7,11 @@ import requests
 import base64
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
+import utils
 
-
-utils.load_env()
+utils.load_environment()
 api_key = os.environ["FIRECRAWL_API_KEY"]
 image_link_regex = r"https?://\S+\.(?:jpg|jpeg|png|gif|svg)(?:\?[\w=&]*)?"
-category_question = "In less than 10 words and ignoring the brand, what category of product does this detail page sell?"
 image_question = '''Extract all image urls from the following markdown, making sure to avoid small icons and logos, and only include the images that pertain to the main product on the page, rather than images of recommended or similar products in other components of the page. Prefer larger images (over 1kb), prefer to be stricter and only keep 1-2 images with white-only backgrounds if possible, rather than keeping too many or images with complex backgrounds. Return the result as a space-delimited list of image_urls and nothing else.'''
 llm = ChatOpenAI(model_name="gpt-4o-mini")
 
@@ -29,6 +28,7 @@ class PageAnalyzer:
         self.url = trim_url(url)
         self._do_scrape()
         # self._check_or_scrape()
+        self.load_relevant_images()
 
     def _do_scrape(self):
         # scrape the page

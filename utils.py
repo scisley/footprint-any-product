@@ -1,29 +1,21 @@
-from dotenv import load_dotenv
-from pathlib import Path
 import os
-from psycopg_pool import ConnectionPool
-# from langchain_openai import OpenAIEmbeddings
-# from langchain_postgres import PGVector
+from pathlib import Path
+from dotenv import load_dotenv
 
-def load_env(dir='.'):
-    # Load environment variables from .env.local file
-    env_path = Path(dir) / '.env.local'
-    load_dotenv(dotenv_path=env_path)
+# --- Environment Setup ---
 
-load_env()
-
-DB_URI = os.environ['DB_DEV_CONNECTION']
-# embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-# vector_store = PGVector(
-#     embeddings=embeddings,
-#     collection_name="my_docs",
-#     connection=DB_URI.replace("postgresql","postgresql+psycopg"),
-# )
-pool = ConnectionPool(
-        conninfo=DB_URI,
-        max_size=20,
-        kwargs={
-            "autocommit": True,
-            "prepare_threshold": 0,
-        }
-    )
+def load_environment():
+    """Load environment variables from .env.local file."""
+    dotenv_path = Path(__file__).parent / '.env.local'
+    
+    if dotenv_path.exists():
+        load_dotenv(dotenv_path=dotenv_path, override=True)
+        print(f"Environment loaded from {dotenv_path}")
+    else:
+        print(f"Warning: .env.local file not found at {dotenv_path}")
+    
+    # Verify critical environment variables
+    if os.environ.get('OPENAI_API_KEY'):
+        print("OPENAI_API_KEY loaded successfully")
+    else:
+        print("Warning: OPENAI_API_KEY not found in environment variables")
