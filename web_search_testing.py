@@ -20,7 +20,11 @@ def perform_web_search(query: str) -> str:
     # potentially involving a different model or external service (like gpt-4.1 with web search).
     print(f"Simulating web search for query: '{query}' (Conceptual tool execution)")
     # In a real application, this would call a web search API
-    return f"Mock search result for '{query}': The current world population is approximately 8.1 billion people as of late 2024."
+    # Return a mock result relevant to the query
+    if "weather" in query.lower() or "seattle" in query.lower():
+        return f"Mock search result for '{query}': The weather in Seattle today is partly cloudy with a high of 65°F (18°C) and a low of 50°F (10°C). There is a slight chance of rain in the evening."
+    else:
+        return f"Mock search result for '{query}': The current world population is approximately 8.1 billion people as of late 2024."
 
 # Define the tool schema for the o3-2025-04-16 model
 tools = [
