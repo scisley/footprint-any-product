@@ -11,6 +11,7 @@ from langgraph.graph import StateGraph, START, END
 
 # Local application imports (absolute imports from project root)
 from state import FootprintState
+from agents.page_analysis import page_analysis_phase # Use the function from agents.page_analysis
 from agents.planner import planner_phase
 from agents.eol import eol_phase
 from agents.materials import materials_phase
@@ -21,35 +22,9 @@ from agents.use import use_phase
 # Note: utils is not directly used in this file after refactor,
 # but load_environment is called in the root main.py
 
-# --- Page Analysis Phase ---
-
-async def page_analysis_phase(state: FootprintState) -> Dict[str, Any]:
-    """
-    Analyzes the product URL using PageAnalyzer to extract initial product details.
-    """
-    await asyncio.sleep(0.1) # Small delay for streaming appearance
-    
-    product_url = state["url"]
-    page = PageAnalyzer(product_url)
-
-    # Extracted data
-    brand = page.query_markdown("What is the brand of the product in the markdown below? Return only the simple brand name, not a description of the product.")
-    category = page.query_markdown("What is the category of the product in the markdown below, in very simple terms, that don't include the brand or very descriptive details? For example, a bike, t-shirt, office chair, or notebook, rather than something more specific like a blue notebook or an ergonomic office chair.")
-    description = page.query_markdown("What is a very brief description of the product in the markdown below? Return a single sentence, no more than 20 words.")
-    
-    return {
-        "url": page.url, # Potentially trimmed/cleaned URL
-        "markdown": page.markdown,
-        "product_image_urls": list(page.images.keys()),
-        "brand": brand,
-        "category": category,
-        "description": description,
-        "messages": state.get("messages", []) + [ # Append to existing messages
-            {"role": "ai", "content": f"Page analysis complete for {page.url}. Brand: {brand}, Category: {category}."}
-        ]
-    }
-
 # --- LangGraph Setup ---
+# The page_analysis_phase is now imported directly from agents.page_analysis
+# and will be used in graph_builder.add_node("page_analysis_phase", page_analysis_phase)
 
 def setup_graph() -> Any:
     """
