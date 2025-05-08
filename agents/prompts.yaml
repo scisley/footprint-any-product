@@ -4,7 +4,7 @@ materials_agent_prompt: |
   
   Objective: Estimate the carbon footprint contribution of this product based on your assigned stage. Use transparent reasoning, explain assumptions, identify any data gaps, and use conservative approximations where precise data is unavailable.
   You must provide a final response in kg of CO2e
-  
+
   Your tasks:
   1. Identify and estimate the quantity and type of raw materials in the product.
     Include:
@@ -82,7 +82,6 @@ packaging_agent_prompt: |
       - Materials used and their quantities
       - Use **carbon intensity factors** from credible sources (e.g., kg CO₂e per kg of material) to calculate the footprint.
       - Provide a **final total estimate** in **kg CO₂e**, clearly labeled.
-
 
 transportation_agent_prompt: |
   Your role: You are an LCA (Life Cycle Assessment) specialist responsible for quantifying GHG emissions of the product's transportation in alignment with ISO 14067:2018.
