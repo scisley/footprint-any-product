@@ -16,7 +16,9 @@ def perform_web_search(query: str) -> str:
     Returns:
         A string representing the search result.
     """
-    print(f"Simulating web search for query: '{query}'")
+    # This function simulates the action that would typically be performed by a tool
+    # potentially involving a different model or external service (like gpt-4.1 with web search).
+    print(f"Simulating web search for query: '{query}' (Conceptual tool execution)")
     # In a real application, this would call a web search API
     return f"Mock search result for '{query}': The current world population is approximately 8.1 billion people as of late 2024."
 
@@ -50,9 +52,10 @@ if __name__ == "__main__":
     ]
 
     # First call to the model
-    print("Calling model with initial message...")
+    model_name = "o3-2025-04-16"
+    print(f"Calling model '{model_name}' with initial message...")
     response = client.chat.completions.create( # Use standard chat completions
-        model="o3-2025-04-16",
+        model=model_name,
         messages=messages, # Use standard messages parameter
         tools=tools,
         tool_choice="auto"
@@ -97,9 +100,10 @@ if __name__ == "__main__":
         })
 
         # Second call to the model with function output
-        print("\nCalling model again with function output...")
+        model_name = "o3-2025-04-16"
+        print(f"\nCalling model '{model_name}' again with function output...")
         second_response = client.chat.completions.create( # Use standard chat completions
-            model="o3-2025-04-16",
+            model=model_name,
             messages=messages, # Pass the updated messages list
             tools=tools, # Include tools again in case another call is needed
         )
