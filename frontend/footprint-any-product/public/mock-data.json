@@ -1,0 +1,336 @@
+{
+  "request_id": "req_abc123456789",
+  "timestamp": "2025-05-07T15:22:33Z",
+  "product_url": "https://example.com/products/eco-laptop",
+  "status": "completed",
+  "agents": [
+    {
+      "id": 1,
+      "name": "Materials Agent",
+      "status": "Completed: Materials analyzed",
+      "carbonScore": 58,
+      "timestamp": "2025-05-07T15:23:45Z",
+      "details": "Analysis of product materials and their environmental impact",
+      "data": {
+        "materials": [
+          {
+            "name": "Aluminum",
+            "percentage": 42,
+            "carbonIntensity": "High",
+            "recyclability": "High",
+            "sourceInfo": "Mining operations in Australia",
+            "embodiedEnergy": "High",
+            "waterUsage": "Medium-High"
+          },
+          {
+            "name": "Plastic (ABS)",
+            "percentage": 31,
+            "carbonIntensity": "High",
+            "recyclability": "Medium",
+            "sourceInfo": "Petroleum-based, manufactured in China",
+            "embodiedEnergy": "High",
+            "waterUsage": "Medium"
+          },
+          {
+            "name": "Glass",
+            "percentage": 12,
+            "carbonIntensity": "Medium",
+            "recyclability": "High",
+            "sourceInfo": "Manufactured in Taiwan",
+            "embodiedEnergy": "Medium-High",
+            "waterUsage": "Low"
+          },
+          {
+            "name": "Various metals (copper, lithium, etc.)",
+            "percentage": 15,
+            "carbonIntensity": "Very High",
+            "recyclability": "Medium",
+            "sourceInfo": "Mixed sources, including Chile, Congo",
+            "embodiedEnergy": "Very High",
+            "waterUsage": "High"
+          }
+        ],
+        "totalRecyclablePercentage": 68,
+        "materialsSustainabilityScore": 42,
+        "materialsRenewablePercentage": 8,
+        "rareEarthContent": "Medium",
+        "toxicMaterialPresence": "Low-Medium",
+        "recommendedAlternatives": [
+          "Recycled aluminum",
+          "Bio-plastics",
+          "Reduced rare-earth usage"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "Manufacturing Agent",
+      "status": "Completed: Manufacturing assessed",
+      "carbonScore": 65,
+      "timestamp": "2025-05-07T15:24:12Z",
+      "details": "Evaluation of energy sources and manufacturing processes",
+      "data": {
+        "manufacturingLocations": [
+          {
+            "country": "China",
+            "city": "Shenzhen",
+            "facilityType": "Primary assembly",
+            "energySources": ["Coal (62%)", "Natural Gas (28%)", "Renewable (10%)"],
+            "waterUsage": "High",
+            "emissions": "High",
+            "certifications": ["ISO 14001", "Limited renewable energy usage"]
+          },
+          {
+            "country": "Taiwan",
+            "city": "Taipei",
+            "facilityType": "Component manufacturing",
+            "energySources": ["Coal (45%)", "Nuclear (30%)", "Renewable (25%)"],
+            "waterUsage": "Medium-High",
+            "emissions": "Medium-High",
+            "certifications": ["ISO 14001", "ISO 9001"]
+          }
+        ],
+        "processEnergy": "High",
+        "wasteGeneration": "Medium-High",
+        "laborPractices": "Average compliance with industry standards",
+        "supplyChainTransparency": "Limited",
+        "manufacturingEfficiency": "Medium",
+        "qualityControlMetrics": "High",
+        "improvementAreas": [
+          "Increase renewable energy usage",
+          "Implement water recycling systems",
+          "Improve waste management",
+          "Enhance supply chain transparency"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "Packaging Agent",
+      "status": "Completed: Packaging analyzed",
+      "carbonScore": 42,
+      "timestamp": "2025-05-07T15:24:35Z",
+      "details": "Analysis of product packaging materials and design",
+      "data": {
+        "packagingMaterials": [
+          {
+            "material": "Cardboard",
+            "percentage": 72,
+            "recyclability": "High",
+            "sourceInfo": "70% recycled content",
+            "carbonFootprint": "Low-Medium"
+          },
+          {
+            "material": "Plastic foam",
+            "percentage": 18,
+            "recyclability": "Low",
+            "sourceInfo": "Virgin material, petroleum-based",
+            "carbonFootprint": "High"
+          },
+          {
+            "material": "Plastic film",
+            "percentage": 6,
+            "recyclability": "Low",
+            "sourceInfo": "Virgin material, petroleum-based",
+            "carbonFootprint": "Medium-High"
+          },
+          {
+            "material": "Paper manuals",
+            "percentage": 4,
+            "recyclability": "High",
+            "sourceInfo": "Partially recycled content",
+            "carbonFootprint": "Low"
+          }
+        ],
+        "packagingWeight": "580g",
+        "packagingToProductRatio": 0.28,
+        "excessivePackagingRating": "Medium",
+        "packagingRecyclability": "Medium-High (76%)",
+        "biodegradablePercentage": 74,
+        "disposalImpact": "Medium",
+        "alternativeRecommendations": [
+          "Replace plastic foam with molded pulp",
+          "Use biodegradable plastic films",
+          "Reduce overall packaging size by 15%",
+          "Digital-only manuals"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "name": "Transport Agent",
+      "status": "Completed: Transport routes analyzed",
+      "carbonScore": 53,
+      "timestamp": "2025-05-07T15:25:10Z",
+      "details": "Analysis of transportation methods and distances",
+      "data": {
+        "primaryShippingRoutes": [
+          {
+            "origin": "Shenzhen, China",
+            "destination": "Distribution Centers",
+            "method": "Container Ship",
+            "distance": "~15,000 km",
+            "carbonIntensity": "Medium-High",
+            "emissionsPerUnit": "8.2 kg CO2e"
+          },
+          {
+            "origin": "Distribution Centers",
+            "destination": "Retail Locations",
+            "method": "Truck (Diesel)",
+            "distance": "~1,200 km average",
+            "carbonIntensity": "High",
+            "emissionsPerUnit": "2.3 kg CO2e"
+          },
+          {
+            "origin": "Retail/Warehouses",
+            "destination": "End Customer",
+            "method": "Last-mile Delivery",
+            "distance": "~25 km average",
+            "carbonIntensity": "High",
+            "emissionsPerUnit": "0.5 kg CO2e"
+          }
+        ],
+        "totalTransportEmissions": "11.0 kg CO2e per unit",
+        "packingEfficiency": "Medium (72% space utilization)",
+        "warehousingImpact": "Medium",
+        "transportOptimizationScore": 62,
+        "alternativeSolutions": [
+          "Rail transport where available (-35% emissions)",
+          "Electric or hybrid last-mile delivery (-60% emissions)",
+          "Improved packing density (+15% efficiency)",
+          "Regional manufacturing to reduce shipping distances"
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "name": "Lifecycle Use Agent",
+      "status": "Completed: Usage impact assessed",
+      "carbonScore": 38,
+      "timestamp": "2025-05-07T15:25:45Z",
+      "details": "Analysis of energy consumption during product use",
+      "data": {
+        "expectedLifespan": "5.2 years",
+        "energyConsumption": {
+          "average": "45W active, 1.2W standby",
+          "annualUsage": "~92 kWh/year",
+          "totalLifetimeEnergy": "478 kWh",
+          "carbonIntensity": "Dependent on local grid mix",
+          "averageLifetimeEmissions": "191 kg CO2e (global average grid mix)"
+        },
+        "waterConsumption": "Negligible",
+        "maintenanceRequirements": "Low",
+        "repairability": {
+          "score": "4/10",
+          "limitations": [
+            "Sealed battery",
+            "Soldered RAM",
+            "Specialized tools required",
+            "Limited parts availability"
+          ]
+        },
+        "upgradability": "Very Low",
+        "durabilityTesting": "Passed 4/5 stress tests",
+        "powerEfficiency": "High (Energy Star 8.0 compliant)",
+        "userBehaviorImpact": "High - power settings significantly affect lifetime emissions",
+        "recommendedUsagePractices": [
+          "Enable power saving mode",
+          "Reduce screen brightness",
+          "Use sleep mode when inactive",
+          "Ensure proper ventilation for cooling efficiency"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "name": "End-of-Life Agent",
+      "status": "Completed: Disposal assessed",
+      "carbonScore": 47,
+      "timestamp": "2025-05-07T15:26:20Z",
+      "details": "Analysis of end-of-life handling and recycling potential",
+      "data": {
+        "recyclability": {
+          "overallScore": "Medium (62% recyclable by weight)",
+          "componentsBreakdown": {
+            "highlyRecyclable": ["Aluminum chassis", "Glass screen", "Copper components"],
+            "moderatelyRecyclable": ["Circuit boards", "Steel components"],
+            "hardToRecycle": ["Mixed plastic components", "Composite materials", "Battery cells"]
+          }
+        },
+        "takeback": {
+          "manufacturerProgram": "Limited - only available in select regions",
+          "effectiveness": "Low (17% return rate)",
+          "incentives": "None"
+        },
+        "commonDisposalMethods": {
+          "electronics recycling": "42%",
+          "general waste": "38%",
+          "secondhand market": "15%",
+          "manufacturer takeback": "5%"
+        },
+        "hazardousMaterials": {
+          "presence": "Medium",
+          "types": ["Battery chemicals", "Flame retardants", "Small amounts of mercury", "Lead solder (in older components)"]
+        },
+        "landfillImpact": "Medium-High",
+        "specialHandlingRequirements": "Battery removal, proper e-waste processing",
+        "improvementOpportunities": [
+          "Design for disassembly",
+          "Modular components for easier recycling",
+          "Reduced use of composite materials",
+          "Enhanced takeback program with incentives",
+          "Clearer end-of-life instructions for consumers"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "name": "Summary Agent",
+      "status": "Completed: Final Analysis",
+      "carbonScore": 50,
+      "timestamp": "2025-05-07T15:27:00Z",
+      "details": "Consolidated environmental impact assessment and recommendations",
+      "data": {
+        "totalCarbonFootprint": {
+          "score": 50,
+          "classification": "Medium-High Environmental Impact",
+          "breakdown": {
+            "materials": {"score": 58, "contribution": "24%"},
+            "manufacturing": {"score": 65, "contribution": "31%"},
+            "packaging": {"score": 42, "contribution": "8%"},
+            "transport": {"score": 53, "contribution": "12%"},
+            "usage": {"score": 38, "contribution": "18%"},
+            "endOfLife": {"score": 47, "contribution": "7%"}
+          },
+          "comparativeRanking": "Bottom 40% for this product category"
+        },
+        "keyImpactAreas": [
+          "Energy-intensive manufacturing processes",
+          "High percentage of virgin aluminum and plastic",
+          "Limited repairability and upgradeability",
+          "Inefficient transport logistics",
+          "Poor end-of-life recyclability"
+        ],
+        "positiveSustainabilityAspects": [
+          "Energy-efficient during use",
+          "Relatively good packaging recyclability",
+          "Durable construction extending useful life"
+        ],
+        "consumerRecommendation": "This product has a moderate to high environmental impact. Consider alternatives with better repairability, more recycled materials, and stronger manufacturer take-back programs.",
+        "sustainabilityImprovementPotential": "High",
+        "similarProductsWithBetterScores": [
+          "EcoBook Pro (Score: 32)",
+          "GreenTech Laptop X1 (Score: 38)",
+          "Sustainable Computing SC-3 (Score: 41)"
+        ],
+        "improvementRecommendations": [
+          "Choose products with higher recycled material content",
+          "Look for devices with replaceable batteries and upgradeable components",
+          "Prioritize manufacturers with comprehensive take-back programs",
+          "Consider certified refurbished options for lower initial environmental impact",
+          "Extend device lifespan through proper care and maintenance"
+        ]
+      }
+    }
+  ]
+}

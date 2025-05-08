@@ -1,0 +1,257 @@
+@import "tailwindcss";
+
+:root {
+  /* Base colors */
+  --background: #f8fafc; /* slate-50 */
+  --foreground: #0f172a; /* slate-900 */
+  --card-background: #ffffff;
+  --card-border: #cbd5e1; /* slate-300 */
+  
+  /* Brand colors */
+  --primary: #10b981; /* emerald-500 */
+  --primary-light: #d1fae5; /* emerald-100 */
+  --primary-dark: #047857; /* emerald-700 */
+  
+  /* Score colors */
+  --score-good: #10b981; /* emerald-500 */
+  --score-fair: #f59e0b; /* amber-500 */
+  --score-poor: #ef4444; /* red-500 */
+  --score-neutral: #64748b; /* slate-500 */
+  
+  /* Status colors */
+  --status-idle: #64748b;       /* slate-500 */
+  --status-queued: #f59e0b;     /* amber-500 */
+  --status-processing: #3b82f6; /* blue-500 */
+  --status-completed: #10b981;  /* emerald-500 */
+  --status-error: #ef4444;      /* red-500 */
+  
+  /* UI Elements */
+  --button-hover: #f1f5f9; /* slate-100 */
+  --accent: #8b5cf6; /* violet-500 */
+  --accent-light: #ddd6fe; /* violet-200 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a; /* slate-900 */
+    --foreground: #f8fafc; /* slate-50 */
+    --card-background: #1e293b; /* slate-800 */
+    --card-border: #334155; /* slate-700 */
+    
+    /* Brand colors in dark mode */
+    --primary: #34d399; /* emerald-400 */
+    --primary-light: #064e3b; /* emerald-900 */
+    --primary-dark: #6ee7b7; /* emerald-300 */
+    
+    /* Score colors in dark mode */
+    --score-good: #34d399; /* emerald-400 */
+    --score-fair: #fbbf24; /* amber-400 */
+    --score-poor: #f87171; /* red-400 */
+    --score-neutral: #94a3b8; /* slate-400 */
+    
+    /* Status colors in dark mode */
+    --status-idle: #94a3b8;       /* slate-400 */
+    --status-queued: #fbbf24;     /* amber-400 */
+    --status-processing: #60a5fa; /* blue-400 */
+    --status-completed: #34d399;  /* emerald-400 */
+    --status-error: #f87171;      /* red-400 */
+    
+    /* UI Elements dark mode */
+    --button-hover: #334155; /* slate-700 */
+    --accent: #a78bfa; /* violet-400 */
+    --accent-light: #312e81; /* indigo-900 */
+  }
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Custom classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.slide-in {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+.loading-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.gradient-background {
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--background) 100%);
+}
+
+.eco-card {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid var(--primary);
+}
+
+.eco-card:hover {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.eco-button {
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.eco-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.eco-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.outline-glow:focus {
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.carbon-meter {
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.carbon-meter-fill {
+  height: 100%;
+  transition: width 1.5s ease-out;
+}
+
+.pill {
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pill-primary {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.pill-neutral {
+  background-color: rgba(100, 116, 139, 0.1);
+  color: var(--status-idle);
+}
+
+.pill-accent {
+  background-color: var(--accent-light);
+  color: var(--accent);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.icon-leaf {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12.5C2 12.5 7 5 12 5S22 12.5 22 12.5'/%3E%3Cpath d='M12 5V19'/%3E%3Cpath d='M5 19L12 12L19 19'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+.icon-processing {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  background-color: currentColor;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z'/%3E%3Cpath d='M12 8V12L15 15'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(203, 213, 225, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(71, 85, 105, 0.5);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(100, 116, 139, 0.7);
+  }
+  
+  .loading-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0) 0,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(0, 0, 0, 0) 100%
+    );
+  }
+}
