@@ -144,16 +144,26 @@ export function FootprintAnalysis({
                 const agentName = agentMatch[1];
                 const toolName = agentMatch[2];
                 const toolArgs = agentMatch[3];
+                const toolContent = `${toolName}(${toolArgs})`; // Construct the content for checking and storing
                 
                 setAgents(prev => {
                   const agentData = prev[agentName] || { messages: [], summary: '', carbon: null, isCompleted: false };
+                  
+                  // Prevent duplicate "tool" messages
+                  const isDuplicateToolCall = agentData.messages.some(
+                    (existingMsg) => existingMsg.type === 'tool' && existingMsg.content === toolContent
+                  );
+                  if (isDuplicateToolCall) {
+                    return prev; // Don't add the duplicate message
+                  }
+                  
                   return {
                     ...prev,
                     [agentName]: {
                       ...agentData,
                       messages: [...agentData.messages, { 
                         type: 'tool', 
-                        content: `${toolName}(${toolArgs})` 
+                        content: toolContent 
                       }],
                     }
                   };
