@@ -1,5 +1,6 @@
 import os
 import json
+import sys # Import the sys module
 from openai import OpenAI
 
 # Ensure your OPENAI_API_KEY is set as an environment variable
@@ -49,9 +50,17 @@ tools = [
 ]
 
 if __name__ == "__main__":
+    # Check if a command-line argument is provided for the query
+    if len(sys.argv) > 1:
+        user_query = sys.argv[1]
+        print(f"Using query from command line: '{user_query}'")
+    else:
+        user_query = "What is the weather in seattle today" # Default query
+        print(f"No command line query provided, using default: '{user_query}'")
+
     messages = [
         {"role": "system", "content": "You are a helpful assistant. You have access to a web search tool. Use the `perform_web_search` tool whenever the user asks a question that requires up-to-date information or external knowledge that you might not have, such as current statistics or recent events."},
-        {"role": "user", "content": "What is the weather in seattle today"}
+        {"role": "user", "content": user_query} # Use the user_query variable here
     ]
 
     # First call to the model
