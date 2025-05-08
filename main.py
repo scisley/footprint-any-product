@@ -192,115 +192,53 @@ async def send_agent_messages(websocket: WebSocket, phase_key: str, messages: Li
         first_msg = all_content[0][:100] + "..." if len(all_content[0]) > 100 else all_content[0]
         print(f"First message content sample: {first_msg}")
     
-    # Track which ReAct patterns we've found to report a summary
-    found_react_patterns = set()
     tool_calls_found = 0
-    
-    # Check for messages with "Thought:", "Action:", or "Observation:" prefixes
+
     for msg in messages:
-        if not (isinstance(msg, dict) and isinstance(msg.get("content"), str)):
+        if not isinstance(msg, dict):
             continue
-            
-        content = msg.get("content", "").strip()
-        role = msg.get("role", "")
+
+        role = msg.get("role")
         
-        # For LangGraph ReAct agent messages, they use special patterns
-        if "action_type" in msg or "tool_input" in msg:
-            found_react_patterns.add("LangGraph")
-            action_type = msg.get("action_type", "")
-            tool_name = msg.get("name", "")
-            tool_input = msg.get("tool_input", "")
-            
-            if action_type == "tool" and tool_name:
-                tool_calls_found += 1
-                await websocket.send_text(f"AgentTool({phase_key}): {tool_name}({json.dumps(tool_input)})")
+        if role == "ai":
+            ai_content_text = msg.get("content")
+            tool_calls = msg.get("tool_calls")
+
+            # Send AI's textual content if any (thought, reasoning)
+            # Ensure content is a string before stripping
+            if isinstance(ai_content_text, str) and ai_content_text.strip():
+                await websocket.send_text(f"Agent({phase_key}): {ai_content_text.strip()}")
+                await asyncio.sleep(0.15) # Keep sleep for readability
+
+            # Process structured tool calls
+            if isinstance(tool_calls, list):
+                for tool_call in tool_calls:
+                    if isinstance(tool_call, dict):
+                        tool_name = tool_call.get("name")
+                        tool_args = tool_call.get("args")
+                        # Ensure args is a dict for json.dumps, Langchain tool_calls usually have args as dict
+                        if tool_name and isinstance(tool_args, dict):
+                            tool_calls_found += 1
+                            await websocket.send_text(f"AgentTool({phase_key}): {tool_name}({json.dumps(tool_args)})")
+                            await asyncio.sleep(0.1) 
+        
+        elif role == "tool": # This is an observation/result from a tool
+            tool_content = msg.get("content")
+            # Ensure content is a string before stripping
+            if isinstance(tool_content, str) and tool_content.strip():
+                await websocket.send_text(f"AgentObs({phase_key}): {tool_content.strip()}")
                 await asyncio.sleep(0.1)
-                continue
-        
-        # Try to detect if this is an observation (result of a tool)
-        if role == "observation" or role == "function":
-            await websocket.send_text(f"AgentObs({phase_key}): {content}")
-            await asyncio.sleep(0.1)
-            continue
-        
-        # Common ReAct prefixes to look for with standard formatting
-        for pattern in ["Thought:", "Action:", "Observation:"]:
-            if pattern in content:
-                found_react_patterns.add(pattern)
-        
-        # Check for Thought: pattern
-        if "Thought:" in content:
-            thought_pattern = r"Thought:\s*(.*?)(?=\n[A-Za-z]+:|$)"
-            thought_matches = re.findall(thought_pattern, content, re.DOTALL)
+
+        # elif role == "user":
+            # User messages are typically input, decide if they need to be echoed.
+            # For now, focusing on agent's trace (thoughts, tools, obs).
+            # pass
             
-            for thought in thought_matches:
-                thought_text = thought.strip()
-                if len(thought_text) > 10:
-                    await websocket.send_text(f"Agent({phase_key}): {thought_text}")
-                    await asyncio.sleep(0.15)
-        
-        # Check for Action: pattern (tool calls)
-        if "Action:" in content:
-            action_pattern = r"Action:\s*(.*?)(?=\n[A-Za-z]+:|$)"
-            action_matches = re.findall(action_pattern, content, re.DOTALL)
-            
-            for action in action_matches:
-                action_text = action.strip()
-                
-                # Look for different tool call patterns
-                tool_pattern = r'([A-Za-z_]+)\s*\((?:["\'](.*?)["\']|\{(.*?)\})\)'
-                tool_match = re.search(tool_pattern, action_text)
-                if tool_match:
-                    tool_calls_found += 1
-                    tool_name = tool_match.group(1)
-                    tool_args = tool_match.group(2) or tool_match.group(3) or ""
-                    await websocket.send_text(f"AgentTool({phase_key}): {tool_name}(\"{tool_args}\")")
-                else:
-                    await websocket.send_text(f"AgentAction({phase_key}): {action_text}")
-                
-                await asyncio.sleep(0.15)
-        
-        # Check for Observation: pattern (tool results)
-        if "Observation:" in content:
-            obs_pattern = r"Observation:\s*(.*?)(?=\n[A-Za-z]+:|$)"
-            obs_matches = re.findall(obs_pattern, content, re.DOTALL)
-            
-            for obs in obs_matches:
-                obs_text = obs.strip()
-                if len(obs_text) > 5:
-                    await websocket.send_text(f"AgentObs({phase_key}): {obs_text}")
-                    await asyncio.sleep(0.15)
-    
-    # If we didn't find ReAct patterns, look for regular agent messages
-    if not found_react_patterns and tool_calls_found == 0:
-        sent_count = 0
-        for msg in messages:
-            if not (isinstance(msg, dict) and msg.get("role") == "ai"):
-                continue
-                
-            content = msg.get("content", "").strip()
-            
-            # Only send substantive content (limit to 3 messages)
-            if len(content) > 15 and sent_count < 3:
-                await websocket.send_text(f"Agent({phase_key}): {content}")
-                await asyncio.sleep(0.2)
-                sent_count += 1
-    
-    # Always check for special message types that might be directly from an agent
-    for msg in messages:
-        if isinstance(msg, dict) and isinstance(msg.get("content"), str):
-            content = msg.get("content", "").strip()
-            
-            # For explicitly formatted agent outputs
-            if content.startswith("Processing") and phase_key in content:
-                await websocket.send_text(f"Agent({phase_key}): {content}")
-                await asyncio.sleep(0.1)
-            elif content.startswith("Evaluating") and "options" in content:
-                await websocket.send_text(f"Agent({phase_key}): {content}")
-                await asyncio.sleep(0.1)
-            elif content.startswith("Calculated") and "carbon" in content and "impact" in content:
-                await websocket.send_text(f"Agent({phase_key}): {content}")
-                await asyncio.sleep(0.1)
+        # Note: The previous complex regex parsing and fallbacks for "Thought:", "Action:", 
+        # "Observation:" and other keywords like "Processing...", "Evaluating..." 
+        # have been removed to prioritize structured message handling.
+        # If agents produce messages not fitting the AIMessage/ToolMessage structure,
+        # those might not be displayed as detailedly as before.
                 
     # Send status information
     if tool_calls_found > 0:
