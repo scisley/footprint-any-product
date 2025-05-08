@@ -1,5 +1,5 @@
 import os # Import the os module
-import google.generativeai as genai
+import google as genai
 from google.genai import types # Keep the import for types as it seems necessary
 
 # Import Client is not needed here, access via genai alias
