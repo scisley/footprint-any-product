@@ -48,11 +48,7 @@ async def manufacturing_phase(state: FootprintState):
         "manufacturing": {
             "carbon": response["structured_response"].carbon, 
             "summary": response["structured_response"].summary, 
-            "messages": response["messages"] + [
-                {"role": "ai", "content": "Analyzing manufacturing processes for this product..."},
-                {"role": "ai", "content": "Evaluating factory energy usage and process emissions..."},
-                {"role": "ai", "content": f"Calculated total manufacturing carbon impact: {response['structured_response'].carbon} kg CO2e"}
-            ]
+            "messages": response["messages"]
         }
     }
     
