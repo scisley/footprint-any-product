@@ -90,8 +90,17 @@ export function FootprintAnalysis({
                 const content = message.substring(message.indexOf(':') + 1).trim();
                 
                 setAgents(prev => {
-                  // Make sure we have an entry for this agent
                   const agentData = prev[agentName] || { messages: [], summary: '', carbon: null, isCompleted: false };
+                  
+                  // Prevent duplicate "thinking" messages for the planner
+                  if (agentName === 'planner') {
+                    const isDuplicate = agentData.messages.some(
+                      (existingMsg) => existingMsg.type === 'thinking' && existingMsg.content === content
+                    );
+                    if (isDuplicate) {
+                      return prev; // Don't add the duplicate message
+                    }
+                  }
                   
                   return {
                     ...prev,
