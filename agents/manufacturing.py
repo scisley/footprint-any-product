@@ -6,6 +6,8 @@ from tools.emissions_factors import emissions_factor_finder_tool
 from state import FootprintState
 import os
 import logging
+import yaml
+from pathlib import Path
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -15,30 +17,17 @@ class ManufacturingResponse(BaseModel):
     carbon: float = Field(description="The carbon footprint of manufacturing in kg of CO2e.")
     summary: str = Field(description="A 2 sentence summary of the manufacturing LCA process.")
 
+# Load prompts from YAML
+_PROMPTS_FILE = Path(__file__).parent / "prompts.yaml"
+with open(_PROMPTS_FILE, 'r') as f:
+    _prompts_data = yaml.safe_load(f)
+
+manufacturing_agent_prompt_text = _prompts_data['manufacturing_agent_prompt']
+
 manufacturing_agent = create_react_agent(
     model=ChatOpenAI(model_name="gpt-4o", temperature=0),
     tools=[emissions_factor_finder_tool, calculator],
-    prompt="""
-    You are a manufacturing process expert. You need to estimate the carbon footprint of
-    manufacturing the product. You must provide a final response in kg of CO2e.
-    
-    Consider all the major manufacturing processes that would be used, such as:
-    - Energy used in assembly facilities
-    - Process emissions (e.g., semiconductor fabrication)
-    - Chemical treatments and coatings
-    - Machining and forming operations
-    - Quality testing and validation
-    
-    For each manufacturing process:
-    1. Estimate the approximate energy/resource requirements
-    2. Research the emissions factor for the process
-    3. Calculate the carbon impact
-    
-    Consider both direct manufacturing emissions and emissions from the energy sources
-    used in the factories where the product is made.
-    
-    Use your tools, but if unknown values remain, use reasonable assumptions.
-    """,
+    prompt=manufacturing_agent_prompt_text,
     response_format=ManufacturingResponse,
     name="manufacturing_agent"
 )
