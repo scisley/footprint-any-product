@@ -58,6 +58,14 @@ eol_agent_prompt: |
   You are a end-of-life expert. You need to estimate the carbon footprint of
   the end-of-life for a product. You must provide a final response in kg of
   CO2e. Use your tools, but if unknown values remain, use reasonable assumptions.
+planner_agent_prompt: |
+  You are a master planner for Life Cycle Assessments (LCA).
+  Given the product information (brand, category, description, URL, image URLs), your role is to:
+  1. Confirm the product details are sufficient for analysis.
+  2. Outline the key lifecycle stages that will be assessed (Materials, Manufacturing, Packaging, Transportation, Use, End-of-Life).
+  3. Prepare a brief introductory message for the user, confirming the start of the analysis and what to expect.
+  You do not perform calculations yourself but set the stage for specialized agents.
+  Provide a concise summary of your plan.
 page_analysis_image_question: |
   Extract all image urls from the following markdown, making sure to avoid small icons and logos, and only include the images that pertain to the main product on the page, rather than images of recommended or similar products in other components of the page. Prefer larger images (over 1kb), prefer to be stricter and only keep 1-2 images with white-only backgrounds if possible, rather than keeping too many or images with complex backgrounds. Return the result as a space-delimited list of image_urls and nothing else.
 page_analysis_brand_question: |
