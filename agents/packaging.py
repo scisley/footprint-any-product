@@ -47,11 +47,7 @@ async def packaging_phase(state: FootprintState):
         "packaging": {
             "carbon": response["structured_response"].carbon, 
             "summary": response["structured_response"].summary, 
-            "messages": response["messages"] + [
-                {"role": "ai", "content": "Analyzing packaging materials for this product..."},
-                {"role": "ai", "content": "Evaluating primary and secondary packaging components..."},
-                {"role": "ai", "content": f"Calculated total packaging carbon impact: {response['structured_response'].carbon} kg CO2e"}
-            ]
+            "messages": response["messages"]
         }
     }
     

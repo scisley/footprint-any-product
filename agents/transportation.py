@@ -52,11 +52,7 @@ async def transportation_phase(state: FootprintState):
         "transportation": {
             "carbon": response["structured_response"].carbon, 
             "summary": response["structured_response"].summary, 
-            "messages": response["messages"] + [
-                {"role": "ai", "content": "Analyzing transportation methods for this product..."},
-                {"role": "ai", "content": "Estimating shipping distances and modes of transport..."},
-                {"role": "ai", "content": f"Calculated total transportation carbon impact: {response['structured_response'].carbon} kg CO2e"}
-            ]
+            "messages": response["messages"]
         }
     }
     
