@@ -58,11 +58,7 @@ async def materials_phase(state: FootprintState):
         "materials": {
             "carbon": response["structured_response"].carbon, 
             "summary": response["structured_response"].summary, 
-            "messages": response["messages"] + [
-                {"role": "ai", "content": "Analyzing raw materials for this product..."},
-                {"role": "ai", "content": "Evaluating component materials and their environmental impact..."},
-                {"role": "ai", "content": f"Calculated total materials carbon impact: {response['structured_response'].carbon} kg CO2e"}
-            ]
+            "messages": response["messages"]
         }
     }
     
