@@ -114,3 +114,6 @@ websockets==15.0.1
 xxhash==3.5.0
 yarl==1.20.0
 zstandard==0.23.0
+html2text==2025.4.15
+firecrawl==2.5.3
+Scrapy==2.12.0
