@@ -4,11 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { StreamingTextProps } from '@/types/components';
 
 export function StreamingText({
-  url = 'ws://localhost:3005/ws',
+  url = 'ws://localhost:3005/ws', // WebSocket URL
   isStreaming,
-  brand,
-  category,
-  description,
+  productUrl, // Product URL
   onStreamingComplete
 }: StreamingTextProps) {
   const [text, setText] = useState('');
@@ -19,10 +17,10 @@ export function StreamingText({
   const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    console.log('[StreamingText useEffect] Triggered. Props:', { isStreaming, brand, category, description, wsRef: wsRef.current });
+    console.log('[StreamingText useEffect] Triggered. Props:', { isStreaming, productUrl, wsRef: wsRef.current });
 
     // Logic to establish or close WebSocket connection based on props
-    if (isStreaming && brand && category && description) {
+    if (isStreaming && productUrl) {
       // Only attempt to connect if not already connected
       if (!wsRef.current) {
         console.log('[StreamingText useEffect] Conditions met. Attempting to establish WebSocket connection to:', url);
@@ -37,7 +35,7 @@ export function StreamingText({
             setText(''); // Clear previous text
             hasInitializedRef.current = true; // Mark that we've initialized a connection attempt
             
-            const payload = JSON.stringify({ brand, category, description });
+            const payload = JSON.stringify({ url: productUrl });
             console.log('[StreamingText WebSocket] Sending payload:', payload);
             socket.send(payload);
           };
@@ -139,7 +137,7 @@ export function StreamingText({
       // Conditions for streaming not met (e.g., isStreaming is false)
       // If there's an existing connection, close it.
       if (wsRef.current) {
-        console.log('[StreamingText useEffect] isStreaming is false or product details missing. Closing existing WebSocket.');
+        console.log('[StreamingText useEffect] isStreaming is false or product URL missing. Closing existing WebSocket.');
         wsRef.current.close();
         wsRef.current = null; // Clear the ref
         setIsConnected(false);
@@ -155,7 +153,7 @@ export function StreamingText({
         setIsConnected(false);
       }
     };
-  }, [isStreaming, url, brand, category, description, onStreamingComplete]);
+  }, [isStreaming, url, productUrl, onStreamingComplete]);
 
   // Format the text with markdown-like syntax
   const formatText = (text: string) => {

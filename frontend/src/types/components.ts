@@ -3,18 +3,14 @@
  */
 
 export interface StreamingTextProps {
-  url?: string;
+  url?: string; // This is the WebSocket URL, not the product URL
   isStreaming: boolean;
-  brand?: string;
-  category?: string;
-  description?: string;
+  productUrl?: string; // Changed from brand, category, description
   onStreamingComplete?: () => void;
 }
 
 export interface ProductInputData {
-  brand: string;
-  category: string;
-  description: string;
+  url: string; // Changed from brand, category, description
 }
 
 export interface ProductInputProps {
@@ -30,11 +26,9 @@ export interface AgentData {
 }
 
 export interface FootprintAnalysisProps {
-  url?: string;
+  url?: string; // This is the WebSocket URL, not the product URL
   isStreaming: boolean;
-  brand?: string;
-  category?: string;
-  description?: string;
+  productUrl?: string; // Changed from brand, category, description
   onStreamingComplete?: () => void;
 }
 
