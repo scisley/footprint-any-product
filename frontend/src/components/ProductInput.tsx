@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { ProductInputProps, ProductInputData } from '@/types/components';
 
 export function ProductInput({ onSubmit, isLoading = false }: ProductInputProps) {
-  const [brand, setBrand] = useState('');
-  const [category, setCategory] = useState('');
-  const [description, setDescription] = useState('');
+  const [brand, setBrand] = useState('Apple');
+  const [category, setCategory] = useState('cellphone');
+  const [description, setDescription] = useState('An Apple iPhone 15 Pro');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
