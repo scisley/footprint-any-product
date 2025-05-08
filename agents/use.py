@@ -46,11 +46,7 @@ async def use_phase(state: FootprintState):
         "use": {
             "carbon": response["structured_response"].carbon, 
             "summary": response["structured_response"].summary, 
-            "messages": response["messages"] + [
-                {"role": "ai", "content": "Analyzing energy consumption during product use..."},
-                {"role": "ai", "content": "Estimating lifecycle usage patterns and power requirements..."},
-                {"role": "ai", "content": f"Calculated total use phase carbon impact: {response['structured_response'].carbon} kg CO2e"}
-            ]
+            "messages": response["messages"]
         }
     }
     
