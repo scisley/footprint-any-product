@@ -1,4 +1,4 @@
-from google import genai
+import google.generativeai as genai
 from google.genai import types
 
 client = genai.Client()
