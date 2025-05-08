@@ -108,21 +108,28 @@ def setup_graph() -> Any:
         """
         # Small delay to help with streaming
         await asyncio.sleep(0.2)
+
+        # Use the brand, category, description from the state
+        # These are now populated directly from the WebSocket message via the initial astream input
+        brand = state.get("brand", "Unknown Brand")
+        category = state.get("category", "Unknown Category")
+        description = state.get("description", "No description provided")
         
-        # Initial agent messages showing reasoning
+        # Initial agent messages showing reasoning, incorporating the dynamic product details
         agent_messages = [
-            {"role": "ai", "content": "Analyzing product details..."},
-            {"role": "ai", "content": "Determining product category and specifications..."},
-            {"role": "ai", "content": "Preparing environmental assessment workflow..."}
+            {"role": "ai", "content": f"Received product for analysis: Brand='{brand}', Category='{category}', Description='{description}'."},
+            {"role": "ai", "content": "Initializing environmental assessment workflow..."},
+            {"role": "ai", "content": "Planner is preparing to delegate tasks to specialized agents."}
         ]
         
-        # In a production version, this should analyze the URL or product name
-        # For demo purposes, using fixed example data
+        # The planner's role is now primarily to kick off the process and provide initial messages.
+        # The actual brand, category, and description are already in the state.
+        # It can confirm or pass them through.
         return {
-            "messages": agent_messages,
-            "brand": "Apple",
-            "category": "cellphone",
-            "description": "An Apple iPhone 15 Pro",
+            "messages": agent_messages, # These messages will be added to the FootprintState
+            "brand": brand, # Ensure these are propagated if not already set by astream input
+            "category": category,
+            "description": description,
         }
     
     # Add planner node to the graph
@@ -559,11 +566,18 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.send_text("SystemMessage: WebSocket connection established")
     
     try:
-        # Receive the product URL from the client
+        # Receive the product details from the client
         data = await websocket.receive_text()
         request_data = json.loads(data)
-        product_url = request_data.get("url", "")
+        product_brand = request_data.get("brand", "")
+        product_category = request_data.get("category", "")
+        product_description = request_data.get("description", "")
         
+        if not (product_brand and product_category and product_description):
+            await websocket.send_text("ErrorMessage: Missing product brand, category, or description.")
+            await websocket.close()
+            return
+
         # Initial messages to client
         await websocket.send_text("SystemMessage: Starting carbon footprint analysis")
         await websocket.send_text("SystemMessage: Processing carbon footprint analysis in real-time")
@@ -575,9 +589,11 @@ async def websocket_endpoint(websocket: WebSocket):
         # Stream the workflow execution
         stream = graph.astream(
             {
-                "user_input": "calculate the carbon footprint",
-                "url": product_url,
-                "messages": [("human", f"Analyze the carbon footprint of: {product_url}")]
+                "user_input": f"Brand: {product_brand}, Category: {product_category}, Description: {product_description}",
+                "brand": product_brand,
+                "category": product_category,
+                "description": product_description,
+                "messages": [("human", f"Analyze carbon footprint for Brand: {product_brand}, Category: {product_category}, Description: {product_description}")]
             },
             config,
             stream_mode=["updates", "values"]

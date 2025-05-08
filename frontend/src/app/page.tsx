@@ -4,14 +4,19 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { ProductInput } from '@/components/ProductInput';
 import { FootprintAnalysis } from '@/components/FootprintAnalysis';
+import { ProductInputData } from '@/types/components';
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [productInput, setProductInput] = useState('');
+  const [productBrand, setProductBrand] = useState('');
+  const [productCategory, setProductCategory] = useState('');
+  const [productDescription, setProductDescription] = useState('');
   const webSocketUrl = 'ws://localhost:3005/ws';
 
-  const handleSubmit = (input: string) => {
-    setProductInput(input);
+  const handleSubmit = (input: ProductInputData) => {
+    setProductBrand(input.brand);
+    setProductCategory(input.category);
+    setProductDescription(input.description);
     setIsAnalyzing(true);
   };
 
@@ -49,10 +54,12 @@ export default function Home() {
           isLoading={isAnalyzing} 
         />
         
-        <FootprintAnalysis 
+        <FootprintAnalysis
           url={webSocketUrl}
           isStreaming={isAnalyzing}
-          productUrl={productInput}
+          brand={productBrand}
+          category={productCategory}
+          description={productDescription}
           onStreamingComplete={handleAnalysisComplete}
         />
       </main>

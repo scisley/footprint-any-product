@@ -5,12 +5,20 @@
 export interface StreamingTextProps {
   url?: string;
   isStreaming: boolean;
-  productUrl?: string;
+  brand?: string;
+  category?: string;
+  description?: string;
   onStreamingComplete?: () => void;
 }
 
+export interface ProductInputData {
+  brand: string;
+  category: string;
+  description: string;
+}
+
 export interface ProductInputProps {
-  onSubmit: (input: string) => void;
+  onSubmit: (input: ProductInputData) => void;
   isLoading?: boolean;
 }
 
@@ -24,7 +32,9 @@ export interface AgentData {
 export interface FootprintAnalysisProps {
   url?: string;
   isStreaming: boolean;
-  productUrl?: string;
+  brand?: string;
+  category?: string;
+  description?: string;
   onStreamingComplete?: () => void;
 }
 

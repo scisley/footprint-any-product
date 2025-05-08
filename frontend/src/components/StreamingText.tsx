@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { StreamingTextProps } from '@/types/components';
 
-export function StreamingText({ 
-  url = 'ws://localhost:3005/ws', 
+export function StreamingText({
+  url = 'ws://localhost:3005/ws',
   isStreaming,
-  productUrl,
-  onStreamingComplete 
+  brand,
+  category,
+  description,
+  onStreamingComplete
 }: StreamingTextProps) {
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -17,8 +19,8 @@ export function StreamingText({
   const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    // Only connect when streaming should start and we have a product URL
-    if (!isStreaming || !productUrl) return;
+    // Only connect when streaming should start and we have product details
+    if (!isStreaming || !brand || !category || !description) return;
     
     if (!wsRef.current) {
       try {
@@ -31,8 +33,8 @@ export function StreamingText({
           setText('');
           hasInitializedRef.current = false;
           
-          // Send the product URL to the server when the connection is established
-          const payload = JSON.stringify({ url: productUrl });
+          // Send the product details to the server when the connection is established
+          const payload = JSON.stringify({ brand, category, description });
           socket.send(payload);
         };
 
@@ -137,7 +139,7 @@ export function StreamingText({
         setIsConnected(false);
       }
     };
-  }, [isStreaming, url, productUrl, onStreamingComplete]);
+  }, [isStreaming, url, brand, category, description, onStreamingComplete]);
 
   // Format the text with markdown-like syntax
   const formatText = (text: string) => {
