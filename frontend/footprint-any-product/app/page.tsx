@@ -12,6 +12,9 @@ import { Agent, ApiResponse } from './types';
 // Import agents processing function
 import { processProductAnalysis } from './lib/agents';
 
+// Import WebSocket utilities
+import { initSessionId, initWebSocketConnection, addMessageHandler, closeWebSocketConnection } from './lib/websocket';
+
 export default function Home() {
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -53,28 +56,45 @@ export default function Home() {
     }
   };
   
-  // Effect to pre-load our JSON data
+  // Initialize WebSocket connection when component mounts
   useEffect(() => {
-    async function loadMockData() {
-      try {
-        // In a real app, this would be an API call
-        const response = await fetch('/mock-data.json');
-        if (!response.ok) {
-          throw new Error('Failed to load data');
-        }
-        
-        const data: ApiResponse = await response.json();
-        setApiResponse(data);
-        
-        // If testing, we can auto-load the data
-        // setAgents(data.agents);
-      } catch (error) {
-        console.error('Error loading mock data:', error);
-      }
-    }
+    // Initialize the session ID
+    initSessionId();
     
-    // Load the mock data when component mounts
-    loadMockData();
+    // Initialize WebSocket connection
+    initWebSocketConnection();
+    
+    // Set up message handler for WebSocket updates
+    const removeHandler = addMessageHandler((message) => {
+      if (message.type === 'agent_status_update') {
+        // Find the agent with the matching name
+        const agentIndex = agents.findIndex(agent => 
+          agent.name.toLowerCase().includes(message.agent.toLowerCase().replace('Agent', ''))
+        );
+        
+        if (agentIndex !== -1) {
+          // Update the agent's status
+          setAgents(prevAgents => 
+            prevAgents.map((agent, index) => 
+              index === agentIndex 
+                ? { 
+                    ...agent, 
+                    status: message.status === 'processing' ? 'Processing...' : 
+                            message.status === 'completed' ? 'Completed' : 
+                            message.status === 'error' ? 'Error' : agent.status
+                  } 
+                : agent
+            )
+          );
+        }
+      }
+    });
+    
+    // Clean up WebSocket connection on unmount
+    return () => {
+      removeHandler();
+      closeWebSocketConnection();
+    };
   }, []);
   
   const handleAnalyze = async () => {

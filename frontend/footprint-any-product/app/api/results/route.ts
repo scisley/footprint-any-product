@@ -9,51 +9,22 @@ export async function GET() {
     const results = await getAllResults();
     
     // Debug: Log results count
-    console.log('Results fetched from database:', results.length);
+    console.log('Results fetched from database:', results ? results.length : 0);
     
-    // If we have no results from the database, return mock data to ensure UI works
+    // If we have no results from the database, return an empty array
     if (!results || results.length === 0) {
-      console.log('Returning mock data since database returned no results');
-      
-      const mockData = [
-        {
-          id: "mock-1",
-          product_url: "MOCK",
-          timestamp: "2025-05-07T15:27:00Z",
-          status: "MOCK",
-          overall_score: 50,
-          product_name: "MOCK"
-        },
-        {
-          id: "mock-2",
-          product_url: "MOCK",
-          timestamp: "2025-05-06T10:15:30Z",
-          status: "MOCK",
-          overall_score: 42,
-          product_name: "MOCK"
-        }
-      ];
-      
-      return NextResponse.json(mockData);
+      console.log('No results found in database');
+      return NextResponse.json([]);
     }
     
     return NextResponse.json(results);
   } catch (error) {
-    console.error('Error fetching results from NEON database:', error);
+    console.error('Error fetching results from database:', error);
     
-    // Return mock data in case of error to ensure UI still works
-    console.log('Returning mock data due to error');
-    const mockData = [
-      {
-        id: "error-mock-1",
-        product_url: "MOCK",
-        timestamp: "2025-05-07T15:27:00Z",
-        status: "MOCK",
-        overall_score: 50,
-        product_name: "MOCK"
-      }
-    ];
-    
-    return NextResponse.json(mockData);
+    // Return error response
+    return NextResponse.json(
+      { error: 'Failed to fetch results', details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
   }
 }
