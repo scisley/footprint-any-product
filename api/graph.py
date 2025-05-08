@@ -9,16 +9,16 @@ from typing import Dict, Any, Union, List
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
 
-# Local application imports (relative imports for modules outside 'api')
-from ..state import FootprintState
-from ..page_analyzer import PageAnalyzer
-from ..agents.planner import planner_phase
-from ..agents.eol import eol_phase
-from ..agents.materials import materials_phase
-from ..agents.manufacturing import manufacturing_phase
-from ..agents.packaging import packaging_phase
-from ..agents.transportation import transportation_phase
-from ..agents.use import use_phase
+# Local application imports (absolute imports from project root)
+from state import FootprintState
+from page_analyzer import PageAnalyzer
+from agents.planner import planner_phase
+from agents.eol import eol_phase
+from agents.materials import materials_phase
+from agents.manufacturing import manufacturing_phase
+from agents.packaging import packaging_phase
+from agents.transportation import transportation_phase
+from agents.use import use_phase
 # Note: utils is not directly used in this file after refactor,
 # but load_environment is called in the root main.py
 

@@ -8,10 +8,10 @@ from typing import Dict, Any, Union # Union might not be needed directly here
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 # Local application imports
-# Adjust relative imports for modules outside the 'api' directory
-from ..state import FootprintState # For type hinting initial_graph_state
+# Adjust imports to be absolute from the project root
+from state import FootprintState # For type hinting initial_graph_state
 # utils module might be needed for other things, or can be removed if not.
-# from .. import utils # Environment is loaded in the root main.py
+# import utils # Environment is loaded in the root main.py
 
 # Import graph setup and streaming helpers from .graph module
 from .graph import setup_graph, process_phase_update, process_summarizer_update, send_agent_messages, page_analysis_phase
