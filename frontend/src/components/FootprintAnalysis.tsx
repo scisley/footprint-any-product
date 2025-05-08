@@ -11,7 +11,6 @@ export function FootprintAnalysis({
   onStreamingComplete
 }: FootprintAnalysisProps) {
   const [error, setError] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [finalSummary, setFinalSummary] = useState<string>('');
