@@ -9,6 +9,9 @@ import SummaryCard from './components/SummaryCard';
 // Import shared types
 import { Agent, ApiResponse } from './types';
 
+// Import agents processing function
+import { processProductAnalysis } from './lib/agents';
+
 export default function Home() {
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -89,48 +92,22 @@ export default function Home() {
         prevAgents.map(agent => ({ ...agent, status: 'Queued', carbonScore: 0 }))
       );
       
-      // Simulate the analysis process
-      const processAgents = (index = 0) => {
-        if (index >= agents.length) {
-          // All agents have been processed
-          setIsAnalyzing(false);
-          return;
-        }
-        
-        const currentAgent = agents[index];
-        
-        // Update this agent to "Processing" state
+      // Update agent callback function
+      const updateAgent = (agentId: number, updatedAgent: Partial<Agent>) => {
         setAgents(prevAgents => 
           prevAgents.map(agent => 
-            agent.id === currentAgent.id 
-              ? { ...agent, status: 'Processing...' } 
+            agent.id === agentId 
+              ? { ...agent, ...updatedAgent } 
               : agent
           )
         );
-        
-        // Simulate processing time
-        setTimeout(() => {
-          // Find the corresponding agent in our JSON data
-          const agentData = apiResponse?.agents.find(a => a.id === currentAgent.id);
-          
-          if (agentData) {
-            // Update with completed data
-            setAgents(prevAgents => 
-              prevAgents.map(agent => 
-                agent.id === currentAgent.id 
-                  ? { ...agentData } 
-                  : agent
-              )
-            );
-          }
-          
-          // Process the next agent
-          processAgents(index + 1);
-        }, 1000); // 1 second delay between each agent
       };
       
-      // Start processing agents
-      processAgents();
+      // Process all agents using BAML
+      await processProductAnalysis(url, updateAgent);
+      
+      // Analysis complete
+      setIsAnalyzing(false);
       
     } catch (error) {
       console.error("Error during analysis:", error);
@@ -225,7 +202,7 @@ export default function Home() {
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="Enter Product URL (e.g., https://example.com/products/laptop)"
+              placeholder="Enter Product Name or URL (e.g., 'Apple MacBook Pro' or product URL)"
               className="flex-grow p-3 rounded-lg outline-glow focus:outline-none"
               style={{ 
                 backgroundColor: 'var(--card-background)', 
