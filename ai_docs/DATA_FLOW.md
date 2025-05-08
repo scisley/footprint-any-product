@@ -33,11 +33,7 @@ async def eol_phase(state: FootprintState):
         "eol": {
             "carbon": response["structured_response"].carbon, 
             "summary": response["structured_response"].summary, 
-            "messages": response["messages"] + [
-                {"role": "ai", "content": "Processing end-of-life information for this product..."},
-                {"role": "ai", "content": "Evaluating recycling and disposal options..."},
-                {"role": "ai", "content": f"Calculated total end-of-life carbon impact: {response['structured_response'].carbon} kg CO2e"}
-            ]
+            "messages": response["messages"] # Actual eol.py returns messages from react_agent directly
         }
     }
     return result
@@ -83,6 +79,7 @@ For each update, the backend extracts agent data and transforms it into standard
 "AgentTool({phase_key}): {tool_name}({tool_args})"
 "AgentObs({phase_key}): {observation_content}"
 "PhaseSummary({phase_key}): {summary}"
+"PhaseCarbon({phase_key}): {carbon_value}" # Added
 "AgentStatus({phase_key}): {status}"
 "SystemMessage: {content}"
 "FinalSummary: {content}" 
@@ -116,34 +113,56 @@ The WebSocket serves as the real-time communication channel between backend and 
 3. Server streams standardized messages to client
 4. Connection remains open until analysis completes
 
-## 4. Frontend Layer (StreamingText.tsx)
+## 4. Frontend Layer (FootprintAnalysis.tsx)
 
 ### WebSocket Connection
 
+The `FootprintAnalysis.tsx` component manages the WebSocket lifecycle:
+
 ```tsx
 useEffect(() => {
-  if (!isStreaming || !productUrl) return;
+  // Only connect when streaming should start and we have all product details
+  if (!isStreaming || !brand || !category || !description) {
+    // ... (handle missing details or non-streaming state)
+    return;
+  }
   
-  const socket = new WebSocket(url);
-  wsRef.current = socket;
+  if (!wsRef.current) {
+    try {
+      const socket = new WebSocket(url);
+      wsRef.current = socket;
 
-  socket.onopen = () => {
-    // Send request to start analysis
-    const payload = JSON.stringify({ url: productUrl });
-    socket.send(payload);
-  };
+      socket.onopen = () => {
+        // ... (reset state, set connected flags)
+        const payload = JSON.stringify({ brand, category, description });
+        socket.send(payload);
+        console.log('[FootprintAnalysis WebSocket] Sent payload:', payload);
+      };
 
-  socket.onmessage = (event) => {
-    // Process incoming messages
-    const message = event.data;
-    setText((prev) => prev + message + "\n");
+      socket.onmessage = (event) => {
+        const message = event.data;
+        console.log('[WebSocket] Message received:', message);
+        // ... (process various message types and update state)
+      };
+
+      socket.onclose = () => { /* ... */ };
+      socket.onerror = (err) => { /* ... */ };
+    } catch (err) { /* ... */ }
+  }
+
+  // Cleanup on unmount or when streaming stops
+  return () => {
+    if (wsRef.current) {
+      wsRef.current.close();
+      // ... (reset connection state)
+    }
   };
-}, [isStreaming, url, productUrl]);
+}, [isStreaming, url, brand, category, description, onStreamingComplete]);
 ```
 
 ### Message Parsing
 
-The frontend detects message types via pattern matching:
+The `FootprintAnalysis.tsx` component parses incoming WebSocket messages to update its state, which then drives the UI rendering, including `AgentSection` components:
 
 ```tsx
 if (message.startsWith('Agent(')) {
@@ -232,6 +251,7 @@ To improve the ordering:
 | Agent Status | `AgentStatus({phase}): {status}` | `AgentStatus(eol): Carbon estimate: 0.75 kg CO2e` |
 | Phase Start | `PhaseStart: {phase}` | `PhaseStart: manufacturing` |
 | Phase Summary | `PhaseSummary({phase}): {summary}` | `PhaseSummary(eol): End-of-life emissions include recycling (0.5)...` |
+| Phase Carbon | `PhaseCarbon({phase}): {carbon_value}` | `PhaseCarbon(eol): 0.75` |
 | Final Summary | `FinalSummary: {content}` | `FinalSummary: Total carbon footprint: 9.76 kg CO2e` |
 | Carbon Value | `CarbonFootprint: {value}` | `CarbonFootprint: 9.76` |
 | System Message | `SystemMessage: {content}` | `SystemMessage: Processing eol phase with 8 messages` |
