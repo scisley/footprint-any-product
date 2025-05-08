@@ -1,0 +1,252 @@
+{
+  "run_id": "e4fc3a25-47b6-4858-a4a0-756390266671",
+  "status": "SUCCESS",
+  "input": {
+    "product_name": "computer tablet",
+    "product_description": null,
+    "mass_kg": 1.1,
+    "source_location": "Taiwan",
+    "destination_location": "Seattle, WA, USA",
+    "upstream_sourcing_countries": null,
+    "material_breakdown": null,
+    "supplier_scope_1_and_2_ef": null
+  },
+  "output": {
+    "adjusted_product_name": "computer tablet",
+    "total_emissions_kgco2e": 81.45580042296177,
+    "emission_factor_kgco2e_per_kg": 74.051,
+    "comparison_to_global_percent": 10.732,
+    "material_breakdown": [
+      {
+        "label": "Battery casing (aluminium alloy)",
+        "details": {
+          "percentage": 3.550295857988165
+        }
+      },
+      {
+        "label": "Lithium-ion battery cell",
+        "details": {
+          "percentage": 20.11834319526627
+        }
+      },
+      {
+        "label": "PCBA for computer tablet",
+        "details": {
+          "percentage": 21.30177514792899
+        }
+      },
+      {
+        "label": "LCD glass panel (uncoated flat glass)",
+        "details": {
+          "percentage": 18.934911242603548
+        }
+      },
+      {
+        "label": "Charging port contacts (copper alloy)",
+        "details": {
+          "percentage": 0.3550295857988165
+        }
+      },
+      {
+        "label": "LCD polarizer (polyethylene terephthalate film)",
+        "details": {
+          "percentage": 4.733727810650887
+        }
+      },
+      {
+        "label": "Charging port housing (polycarbonate)",
+        "details": {
+          "percentage": 0.2366863905325444
+        }
+      },
+      {
+        "label": "Tablet casing (aluminium alloy, AlMg)",
+        "details": {
+          "percentage": 29.585798816568044
+        }
+      },
+      {
+        "label": "Internal data cable (copper, PVC insulation)",
+        "details": {
+          "percentage": 1.1834319526627217
+        }
+      }
+    ],
+    "carbon_impact_potential": 2.8230575701112346,
+    "emissions_by_tier_kgco2e": [
+      {
+        "label": "Tier 3 and beyond",
+        "details": {
+          "value": 67.64141955084511,
+          "unit": "kgCO2e",
+          "percentage": 83.04064191821202
+        }
+      },
+      {
+        "label": "Tier 2",
+        "details": {
+          "value": 10.355347990593518,
+          "unit": "kgCO2e",
+          "percentage": 12.712842961241622
+        }
+      },
+      {
+        "label": "Tier 1",
+        "details": {
+          "value": 3.0717227307722927,
+          "unit": "kgCO2e",
+          "percentage": 3.771030073760588
+        }
+      },
+      {
+        "label": "Transport",
+        "details": {
+          "value": 0.38731015075084857,
+          "unit": "kgCO2e",
+          "percentage": 0.4754850467857765
+        }
+      }
+    ],
+    "emissions_by_material_kgco2e": [
+      {
+        "label": "PCBA for computer tablet",
+        "details": {
+          "value": 59.50251293405303,
+          "unit": "kgCO2e",
+          "percentage": 76.2884345206232
+        }
+      },
+      {
+        "label": "LCD polarizer (polyethylene terephthalate film)",
+        "details": {
+          "value": 8.839853056217388,
+          "unit": "kgCO2e",
+          "percentage": 11.333614628992034
+        }
+      },
+      {
+        "label": "Lithium-ion battery cell",
+        "details": {
+          "value": 4.992551849305022,
+          "unit": "kgCO2e",
+          "percentage": 6.400972766791332
+        }
+      },
+      {
+        "label": "Tablet casing (aluminium alloy, AlMg)",
+        "details": {
+          "value": 2.846679165295795,
+          "unit": "kgCO2e",
+          "percentage": 3.6497399251621503
+        }
+      },
+      {
+        "label": "LCD glass panel (uncoated flat glass)",
+        "details": {
+          "value": 0.9990241338951281,
+          "unit": "kgCO2e",
+          "percentage": 1.280853252494549
+        }
+      },
+      {
+        "label": "Battery casing (aluminium alloy)",
+        "details": {
+          "value": 0.5625954793482781,
+          "unit": "kgCO2e",
+          "percentage": 0.7213061477828289
+        }
+      },
+      {
+        "label": "Internal data cable (copper, PVC insulation)",
+        "details": {
+          "value": 0.2097975588520201,
+          "unit": "kgCO2e",
+          "percentage": 0.26898237640496797
+        }
+      },
+      {
+        "label": "Charging port contacts (copper alloy)",
+        "details": {
+          "value": 0.024247570477961874,
+          "unit": "kgCO2e",
+          "percentage": 0.031087917156412286
+        }
+      },
+      {
+        "label": "Others",
+        "details": {
+          "value": 0.01950579399390185,
+          "unit": "kgCO2e",
+          "percentage": 0.025008464592508543
+        }
+      }
+    ],
+    "emissions_by_country_kgco2e": [
+      {
+        "label": "Taiwan",
+        "details": {
+          "value": 43.19738841939542,
+          "unit": "kgCO2e",
+          "percentage": 53.285053507654766
+        }
+      },
+      {
+        "label": "Rest of World",
+        "details": {
+          "value": 17.395025625036737,
+          "unit": "kgCO2e",
+          "percentage": 21.45719695362271
+        }
+      },
+      {
+        "label": "China",
+        "details": {
+          "value": 9.78064329082847,
+          "unit": "kgCO2e",
+          "percentage": 12.064666873636286
+        }
+      },
+      {
+        "label": "Thailand",
+        "details": {
+          "value": 9.106943554681582,
+          "unit": "kgCO2e",
+          "percentage": 11.233641485245867
+        }
+      },
+      {
+        "label": "Japan",
+        "details": {
+          "value": 0.5956934699557284,
+          "unit": "kgCO2e",
+          "percentage": 0.7348027179925468
+        }
+      },
+      {
+        "label": "United Arab Emirates",
+        "details": {
+          "value": 0.46795833992455443,
+          "unit": "kgCO2e",
+          "percentage": 0.5772382566312134
+        }
+      },
+      {
+        "label": "Malaysia",
+        "details": {
+          "value": 0.3995595097907222,
+          "unit": "kgCO2e",
+          "percentage": 0.4928665976744924
+        }
+      },
+      {
+        "label": "South Korea",
+        "details": {
+          "value": 0.12527806259758245,
+          "unit": "kgCO2e",
+          "percentage": 0.15453360754212306
+        }
+      }
+    ]
+  },
+  "error_response": null
+}
