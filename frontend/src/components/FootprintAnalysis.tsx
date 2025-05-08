@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import { FootprintAnalysisProps, AgentData } from '@/types/components';
 import { AgentSection } from './AgentSection';
 
-export function FootprintAnalysis({ 
-  url = 'ws://localhost:3005/ws', 
+export function FootprintAnalysis({
+  url = 'ws://localhost:3005/ws',
   isStreaming,
-  productUrl,
-  onStreamingComplete 
+  brand,
+  category,
+  description,
+  onStreamingComplete
 }: FootprintAnalysisProps) {
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -28,8 +30,15 @@ export function FootprintAnalysis({
   const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    // Only connect when streaming should start and we have a product URL
-    if (!isStreaming || !productUrl) return;
+    // Only connect when streaming should start and we have all product details
+    if (!isStreaming || !brand || !category || !description) {
+      // If streaming is intended but details are missing, optionally log or set an error
+      if (isStreaming) {
+        console.warn('[FootprintAnalysis useEffect] Streaming is true, but product details are missing. WebSocket will not connect.', { brand, category, description });
+        // setError("Product details are missing, cannot start analysis.");
+      }
+      return;
+    }
     
     if (!wsRef.current) {
       // Set connecting state immediately when attempting to connect
@@ -53,12 +62,12 @@ export function FootprintAnalysis({
             use: { messages: [], summary: '', carbon: null, isCompleted: false },
             eol: { messages: [], summary: '', carbon: null, isCompleted: false },
           });
-          hasInitializedRef.current = false;
+          hasInitializedRef.current = true; // Mark that we've initialized a connection attempt
           
-          // Send the product URL to the server immediately when the connection is established
-          const payload = JSON.stringify({ url: productUrl });
+          // Send the product details to the server immediately when the connection is established
+          const payload = JSON.stringify({ brand, category, description });
           socket.send(payload);
-          console.log('[WebSocket] Sent payload:', payload);
+          console.log('[FootprintAnalysis WebSocket] Sent payload:', payload);
         };
 
         socket.onmessage = (event) => {
@@ -262,7 +271,7 @@ export function FootprintAnalysis({
         setIsConnecting(false);
       }
     };
-  }, [isStreaming, url, productUrl, onStreamingComplete]);
+  }, [isStreaming, url, brand, category, description, onStreamingComplete]);
 
   // Render messages for an agent
   const renderAgentMessages = (agentMessages: Array<{type: string, content: string}>) => {
