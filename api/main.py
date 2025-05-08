@@ -138,16 +138,36 @@ async def websocket_endpoint(websocket: WebSocket):
                     for phase_name in ["page_analysis", "planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"]:
                         # Check for direct phase keys in the state (event is the full state in "values" mode)
                         # Note: page_analysis_phase returns its data at the top level of the state, not nested under "page_analysis"
-                        if phase_name == "page_analysis": # Special handling for page_analysis output
-                            if "brand" in event and "category" in event and "description" in event: # Check if page_analysis has run
-                                # For page_analysis, we don't expect a nested structure like event["page_analysis"]
-                                # Its results (brand, category, etc.) are directly in the 'event' (state)
-                                # We can send a system message or specific updates if needed
-                                # For now, we'll let the planner_phase handle displaying these.
-                                print(f"Page analysis data found in state: Brand='{event.get('brand')}', Category='{event.get('category')}'")
+                        # Special handling for page_analysis output which is at the top level of the state
+                        if phase_name == "page_analysis":
+                            # Check for direct state keys updated by page_analysis_phase
+                            if "brand" in event:
+                                await websocket.send_text(f"PageAnalysisBrand: {event['brand']}")
+                                await asyncio.sleep(0.05)
+                            if "category" in event:
+                                await websocket.send_text(f"PageAnalysisCategory: {event['category']}")
+                                await asyncio.sleep(0.05)
+                            if "short_description" in event:
+                                await websocket.send_text(f"PageAnalysisShortDescription: {event['short_description']}")
+                                await asyncio.sleep(0.05)
+                            if "long_description" in event:
+                                await websocket.send_text(f"PageAnalysisLongDescription: {event['long_description']}")
+                                await asyncio.sleep(0.05)
+                            if "product_image_urls" in event and isinstance(event["product_image_urls"], list):
+                                try:
+                                    # Send image URLs as a JSON string
+                                    await websocket.send_text(f"PageAnalysisImageUrls: {json.dumps(event['product_image_urls'])}")
+                                    await asyncio.sleep(0.05)
+                                except Exception as json_err:
+                                    print(f"Error serializing image URLs: {json_err}")
+                                    # Optionally send an error message to the client
+                                    # await websocket.send_text(f"ErrorMessage: Failed to send image URLs: {json_err}")
                             continue # Move to next phase_name check
 
-                        if phase_name in event: # For planner and other agents
+                        # Check for agent outputs and node outputs (planner, materials, etc.)
+                        # Iterate through potential phase keys
+                        # The loop header is already defined above, this is just the check inside the loop
+                        if phase_name in event and isinstance(event[phase_name], dict): # For planner and other agents
                             phase_key = phase_name
                             phase_data = event[phase_name] # e.g. event["planner"] or event["materials"]
                         else:
