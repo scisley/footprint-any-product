@@ -20,8 +20,8 @@ from langgraph.graph import StateGraph, START, END
 
 # Local application imports
 from state import FootprintState
-from page_analyzer import PageAnalyzer # Added import
 from agents.planner import planner_phase
+from agents.page_analysis import page_analysis_phase
 from agents.eol import eol_phase
 from agents.materials import materials_phase
 from agents.manufacturing import manufacturing_phase
@@ -53,34 +53,6 @@ def read_root():
 def read_item(item_id: int, q: Union[str, None] = None):
     """Example endpoint with path and query parameters."""
     return {"item_id": item_id, "q": q}
-
-# --- Page Analysis Phase ---
-
-async def page_analysis_phase(state: FootprintState) -> Dict[str, Any]:
-    """
-    Analyzes the product URL using PageAnalyzer to extract initial product details.
-    """
-    await asyncio.sleep(0.1) # Small delay for streaming appearance
-    
-    product_url = state["url"]
-    page = PageAnalyzer(product_url)
-
-    # Extracted data
-    brand = page.query_markdown("What is the brand of the product in the markdown below? Return only the simple brand name, not a description of the product.")
-    category = page.query_markdown("What is the category of the product in the markdown below, in very simple terms, that don't include the brand or very descriptive details? For example, a bike, t-shirt, office chair, or notebook, rather than something more specific like a blue notebook or an ergonomic office chair.")
-    description = page.query_markdown("What is a very brief description of the product in the markdown below? Return a single sentence, no more than 20 words.")
-    
-    return {
-        "url": page.url, # Potentially trimmed/cleaned URL
-        "markdown": page.markdown,
-        "product_image_urls": list(page.images.keys()),
-        "brand": brand,
-        "category": category,
-        "description": description,
-        "messages": state.get("messages", []) + [ # Append to existing messages
-            {"role": "ai", "content": f"Page analysis complete for {page.url}. Brand: {brand}, Category: {category}."}
-        ]
-    }
 
 # --- LangGraph Setup ---
 
@@ -495,7 +467,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         # Check for direct phase keys in the state (event is the full state in "values" mode)
                         # Note: page_analysis_phase returns its data at the top level of the state, not nested under "page_analysis"
                         if phase_name == "page_analysis": # Special handling for page_analysis output
-                            if "brand" in event and "category" in event and "description" in event: # Check if page_analysis has run
+                            if "brand" in event and "category" in event and "short_description" in event: # Check if page_analysis has run
                                 # For page_analysis, we don't expect a nested structure like event["page_analysis"]
                                 # Its results (brand, category, etc.) are directly in the 'event' (state)
                                 # We can send a system message or specific updates if needed

@@ -33,7 +33,7 @@ manufacturing_agent = create_react_agent(
 )
 
 async def manufacturing_phase(state: FootprintState):
-    input = f"""Brand: {state["brand"]}\nCategory: {state["category"]}\nDescription: {state["description"]}\nWeight: {state.get("weight_kg", 0)} kg\nMaterials: {state.get("material_description", "")}"""
+    input = f"""Brand: {state["brand"]}\nCategory: {state["category"]}\nDescription: {state["long_description"]}\nWeight: {state.get("weight_kg", 0)} kg\nMaterials: {state.get("material_description", "")}"""
     response = await manufacturing_agent.ainvoke({
         "messages": [{"role": "user", "content": input}]
     })
