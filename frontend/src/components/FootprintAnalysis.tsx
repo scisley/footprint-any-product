@@ -90,8 +90,17 @@ export function FootprintAnalysis({
                 const content = message.substring(message.indexOf(':') + 1).trim();
                 
                 setAgents(prev => {
-                  // Make sure we have an entry for this agent
                   const agentData = prev[agentName] || { messages: [], summary: '', carbon: null, isCompleted: false };
+                  
+                  // Prevent duplicate "thinking" messages for the planner
+                  if (agentName === 'planner') {
+                    const isDuplicate = agentData.messages.some(
+                      (existingMsg) => existingMsg.type === 'thinking' && existingMsg.content === content
+                    );
+                    if (isDuplicate) {
+                      return prev; // Don't add the duplicate message
+                    }
+                  }
                   
                   return {
                     ...prev,
@@ -135,16 +144,26 @@ export function FootprintAnalysis({
                 const agentName = agentMatch[1];
                 const toolName = agentMatch[2];
                 const toolArgs = agentMatch[3];
+                const toolContent = `${toolName}(${toolArgs})`; // Construct the content for checking and storing
                 
                 setAgents(prev => {
                   const agentData = prev[agentName] || { messages: [], summary: '', carbon: null, isCompleted: false };
+                  
+                  // Prevent duplicate "tool" messages
+                  const isDuplicateToolCall = agentData.messages.some(
+                    (existingMsg) => existingMsg.type === 'tool' && existingMsg.content === toolContent
+                  );
+                  if (isDuplicateToolCall) {
+                    return prev; // Don't add the duplicate message
+                  }
+                  
                   return {
                     ...prev,
                     [agentName]: {
                       ...agentData,
                       messages: [...agentData.messages, { 
                         type: 'tool', 
-                        content: `${toolName}(${toolArgs})` 
+                        content: toolContent 
                       }],
                     }
                   };
@@ -394,11 +413,7 @@ export function FootprintAnalysis({
             {agentOrder.map(agentKey => {
               const agent = agents[agentKey];
               const config = agentConfigs[agentKey as keyof typeof agentConfigs];
-              
-              // Only render if there are messages or a summary
-              if (agent.messages.length === 0 && !agent.summary) {
-                return null;
-              }
+              const isActive = agent.messages.length > 0 || !!agent.summary;
               
               return (
                 <AgentSection
@@ -409,9 +424,10 @@ export function FootprintAnalysis({
                   content={renderAgentMessages(agent.messages)}
                   isCompleted={agent.isCompleted}
                   carbon={agent.carbon || undefined}
-                  bgColor={config.bgColor}
-                  textColor={config.textColor}
-                  borderColor={config.borderColor}
+                  bgColor={isActive ? config.bgColor : "bg-gray-100 dark:bg-gray-800"}
+                  textColor={isActive ? config.textColor : "text-gray-400 dark:text-gray-500"}
+                  borderColor={isActive ? config.borderColor : "border-gray-200 dark:border-gray-700"}
+                  isActive={isActive}
                 />
               );
             })}
