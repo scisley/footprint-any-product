@@ -8,26 +8,17 @@ client = OpenAI() # Assumes OPENAI_API_KEY is in environment
 
 def perform_web_search(query: str) -> str:
     """
-    Performs a web search using the gpt-4.1 model with the web_search_preview tool.
+    Simulates performing a web search and returns a mock result.
 
     Args:
         query: The search query string.
 
     Returns:
-        The output text from the web search response.
+        A string representing the search result.
     """
-    # Note: This function directly uses the web_search_preview tool with gpt-4.1
-    # It is called by the main logic when the o3-2025-04-16 model requests it.
-    # Note: The web_search_preview tool type is for the model to use internally
-    # when provided in the initial tools list. It cannot be directly invoked
-    # by user code via the tools parameter in client.responses.create.
-    # Removing the invalid tools parameter to fix the BadRequestError.
-    # This means the function will now just pass the query to gpt-4.1 as input.
-    response = client.responses.create(
-        model="gpt-4.1", # Use the model that has the web_search_preview tool
-        input=query
-    )
-    return response.output_text
+    print(f"Simulating web search for query: '{query}'")
+    # In a real application, this would call a web search API
+    return f"Mock search result for '{query}': The current world population is approximately 8.1 billion people as of late 2024."
 
 # Define the tool schema for the o3-2025-04-16 model
 # Define the tool schema for the o3-2025-04-16 model
@@ -59,21 +50,25 @@ if __name__ == "__main__":
 
     # First call to the model
     print("Calling model with initial message...")
-    response = client.responses.create(
-        model="o3-2025-04-16", # Use the model that will decide to call the function
-        input=messages,
+    response = client.chat.completions.create( # Use standard chat completions
+        model="o3-2025-04-16",
+        messages=messages, # Use standard messages parameter
         tools=tools,
-        tool_choice="auto" # Allow the model to decide whether to call the tool
+        tool_choice="auto"
     )
 
     # Process the response
-    response_message = response.output
+    response_message = response.choices[0].message # Get the message object
 
     # Check if the model wanted to call a function
-    if response_message and isinstance(response_message, list) and response_message[0].type == "function_call":
-        tool_call = response_message[0]
-        function_name = tool_call.name
-        function_args = json.loads(tool_call.arguments)
+    if response_message.tool_calls: # Check for tool_calls attribute
+        tool_calls = response_message.tool_calls # Get the list of tool calls
+
+        # Assuming only one tool call for this example
+        tool_call = tool_calls[0]
+        function_name = tool_call.function.name
+        function_args = json.loads(tool_call.function.arguments)
+        tool_call_id = tool_call.id # Get the tool call ID
 
         print(f"Model requested to call function: {function_name} with args: {function_args}")
 
@@ -91,25 +86,27 @@ if __name__ == "__main__":
             print(function_output)
 
         # Append the function call and function output to messages
-        messages.append(tool_call)
+        # Append the model's response containing the tool call
+        messages.append(response_message)
+        # Append the function output
         messages.append({
-            "type": "function_call_output",
-            "call_id": tool_call.call_id,
-            "output": function_output,
+            "role": "tool", # Use 'tool' role
+            "tool_call_id": tool_call_id, # Use the tool call ID
+            "content": function_output, # Use 'content' for the output
         })
 
         # Second call to the model with function output
         print("\nCalling model again with function output...")
-        second_response = client.responses.create(
+        second_response = client.chat.completions.create( # Use standard chat completions
             model="o3-2025-04-16",
-            input=messages,
+            messages=messages, # Pass the updated messages list
             tools=tools, # Include tools again in case another call is needed
         )
 
         print("\nFinal response from model:")
-        print(second_response.output_text)
+        print(second_response.choices[0].message.content) # Get the final message content
 
     else:
         # Model did not call a function, print its direct response
         print("\nModel did not request a function call. Direct response:")
-        print(response.output_text)
+        print(response_message.content) # Get the direct message content
