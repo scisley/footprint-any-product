@@ -52,11 +52,7 @@ async def eol_phase(state: FootprintState):
         "eol": {
             "carbon": response["structured_response"].carbon, 
             "summary": response["structured_response"].summary, 
-            "messages": response["messages"] + [
-                {"role": "ai", "content": "Processing end-of-life information for this product..."},
-                {"role": "ai", "content": "Evaluating recycling and disposal options..."},
-                {"role": "ai", "content": f"Calculated total end-of-life carbon impact: {response['structured_response'].carbon} kg CO2e"}
-            ]
+            "messages": response["messages"]
         }
     }
     
