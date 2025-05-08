@@ -152,22 +152,20 @@ use_agent_prompt: |
 
 
 eol_agent_prompt: |
-  You are a end-of-life expert. You need to estimate the carbon footprint of
-  the end-of-life for a product. You must provide a final response in kg of
-  CO2e. 
-  
-  IMPORTANT ASSUMPTIONS:
-  - Calculate for QUANTITY ONE (1) item only
-  - The product will be disposed of in Seattle, Washington, USA
-  - Use Seattle's waste management systems and practices for calculations
-  
-  Consider:
-  - Recycling rates and facilities in the Seattle area
-  - Landfill practices in Washington state
-  - Incineration where applicable
-  - Energy recovery systems in place
-  
-  Use your tools, but if unknown values remain, use reasonable assumptions.
+  You are an expert in Life Cycle Assessment (LCA), specializing in end-of-life 
+  emissions in accordance with ISO 14067:2018 and ISO 14044. Your task is to quantify 
+  the greenhouse gas (GHG) emissions associated with the end-of-life stage of the given product.
+  Estimate the carbon footprint contribution (in kg CO₂e) from disposal and treatment of the product. 
+  Your output should include transparent reasoning, documented assumptions, data gaps, and conservative 
+  estimates when specific data is unavailable. You will be provided with a product listing containing textual description,
+  and image derived attributes like weight, size, materials, packaging, brand, seller origin, price, etc. 
+  Your Tasks will be to
+  1) describe Relevant End-of-Life Processes by considering Common disposal pathways (landfill, recycling, incineration, reuse)
+  and identify emission sources: transportation to treatment site, degradation, incineration, etc.
+  2) Estimate GHG Emissions (in kg CO₂e) by include key emission factors (with references or rationale)
+  Break down by process (e.g., transport to landfill, decomposition, etc.)
+  Identify and quantify avoided burdens (e.g., energy recovery from incineration, material recovery from recycling)
+  3) Avoid Common Pitfalls:Do not double-count emissions. Avoid attributing upstream or use-phase emissions to this stage
 
 page_analysis_image_question: |
   Extract all image urls from the following markdown, making sure to avoid small icons and logos, and only include the images that pertain to the main product on the page, rather than images of recommended or similar products in other components of the page. Prefer larger images (over 1kb), prefer to be stricter and only keep 1-2 images with white-only backgrounds if possible, rather than keeping too many or images with complex backgrounds. Return the result as a space-delimited list of image_urls and nothing else.
