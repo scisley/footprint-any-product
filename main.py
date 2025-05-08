@@ -11,11 +11,9 @@ import asyncio
 import json
 import os
 import re
-from pathlib import Path
-from typing import Dict, Any, Union, List, Optional
+from typing import Dict, Any, Union, List
 
 # Third-party imports
-from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
@@ -29,27 +27,10 @@ from agents.manufacturing import manufacturing_phase
 from agents.packaging import packaging_phase
 from agents.transportation import transportation_phase
 from agents.use import use_phase
-
-# --- Environment Setup ---
-
-def load_environment():
-    """Load environment variables from .env.local file."""
-    dotenv_path = Path(__file__).parent / '.env.local'
-    
-    if dotenv_path.exists():
-        load_dotenv(dotenv_path=dotenv_path, override=True)
-        print(f"Environment loaded from {dotenv_path}")
-    else:
-        print(f"Warning: .env.local file not found at {dotenv_path}")
-    
-    # Verify critical environment variables
-    if os.environ.get('OPENAI_API_KEY'):
-        print("OPENAI_API_KEY loaded successfully")
-    else:
-        print("Warning: OPENAI_API_KEY not found in environment variables")
+import utils
 
 # Initialize environment
-load_environment()
+utils.load_environment()
 
 # --- FastAPI App Setup ---
 
