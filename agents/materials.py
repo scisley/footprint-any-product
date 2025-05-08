@@ -33,7 +33,7 @@ materials_agent = create_react_agent(
 )
 
 async def materials_phase(state: FootprintState):
-    input = f"""Brand: {state["brand"]}\nCategory: {state["category"]}\nDescription: {state["description"]}"""
+    input = f"""Brand: {state["brand"]}\nCategory: {state["category"]}\nDescription: {state["long_description"]}"""
     response = await materials_agent.ainvoke({
         "messages": [{"role": "user", "content": input}]
     })
