@@ -400,11 +400,6 @@ async def websocket_endpoint(websocket: WebSocket):
         product_brand = request_data.get("brand", "")
         product_category = request_data.get("category", "")
         product_description = request_data.get("description", "")
-        
-        if not (product_brand and product_category and product_description):
-            await websocket.send_text("ErrorMessage: Missing product brand, category, or description.")
-            await websocket.close()
-            return
 
         # Initial messages to client
         await websocket.send_text("SystemMessage: Starting carbon footprint analysis")
