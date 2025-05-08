@@ -394,11 +394,7 @@ export function FootprintAnalysis({
             {agentOrder.map(agentKey => {
               const agent = agents[agentKey];
               const config = agentConfigs[agentKey as keyof typeof agentConfigs];
-              
-              // Only render if there are messages or a summary
-              if (agent.messages.length === 0 && !agent.summary) {
-                return null;
-              }
+              const isActive = agent.messages.length > 0 || !!agent.summary;
               
               return (
                 <AgentSection
@@ -409,9 +405,10 @@ export function FootprintAnalysis({
                   content={renderAgentMessages(agent.messages)}
                   isCompleted={agent.isCompleted}
                   carbon={agent.carbon || undefined}
-                  bgColor={config.bgColor}
-                  textColor={config.textColor}
-                  borderColor={config.borderColor}
+                  bgColor={isActive ? config.bgColor : "bg-gray-100 dark:bg-gray-800"}
+                  textColor={isActive ? config.textColor : "text-gray-400 dark:text-gray-500"}
+                  borderColor={isActive ? config.borderColor : "border-gray-200 dark:border-gray-700"}
+                  isActive={isActive}
                 />
               );
             })}
