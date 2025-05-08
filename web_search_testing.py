@@ -18,9 +18,13 @@ def perform_web_search(query: str) -> str:
     """
     # Note: This function directly uses the web_search_preview tool with gpt-4.1
     # It is called by the main logic when the o3-2025-04-16 model requests it.
+    # Note: The web_search_preview tool type is for the model to use internally
+    # when provided in the initial tools list. It cannot be directly invoked
+    # by user code via the tools parameter in client.responses.create.
+    # Removing the invalid tools parameter to fix the BadRequestError.
+    # This means the function will now just pass the query to gpt-4.1 as input.
     response = client.responses.create(
         model="gpt-4.1", # Use the model that has the web_search_preview tool
-        tools=[{"type": "web_search_preview"}],
         input=query
     )
     return response.output_text
