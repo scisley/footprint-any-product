@@ -1,9 +1,11 @@
-from google import genai
+import os # Import the os module
+import google.generativeai as genai
 from google.genai import types
 
-# Import Client and types are not needed here, access via genai alias
+# Import Client is not needed here, access via genai alias
 
-client = genai.Client() # Access Client via the genai alias
+# Initialize the client with the API key from environment variables
+client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY")) # Access Client via the genai alias and pass API key
 
 response = client.models.generate_content(
     model="gemini-2.5-flash-preview-04-17",
