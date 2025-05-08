@@ -14,10 +14,12 @@ export default function Home() {
   const webSocketUrl = 'ws://localhost:3005/ws';
 
   const handleSubmit = (input: ProductInputData) => {
+    console.log('[Home Page] handleSubmit called with input:', input);
     setProductBrand(input.brand);
     setProductCategory(input.category);
     setProductDescription(input.description);
-    setIsAnalyzing(true);
+    setIsAnalyzing(true); // This should trigger the re-render and effect in StreamingText
+    console.log('[Home Page] State after handleSubmit: isAnalyzing=true, brand=', input.brand, 'category=', input.category, 'description=', input.description);
   };
 
   const handleAnalysisComplete = () => {

@@ -19,121 +19,137 @@ export function StreamingText({
   const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    // Only connect when streaming should start and we have product details
-    if (!isStreaming || !brand || !category || !description) return;
-    
-    if (!wsRef.current) {
-      try {
-        const socket = new WebSocket(url);
-        wsRef.current = socket;
+    console.log('[StreamingText useEffect] Triggered. Props:', { isStreaming, brand, category, description, wsRef: wsRef.current });
 
-        socket.onopen = () => {
-          setIsConnected(true);
-          setError(null);
-          setText('');
-          hasInitializedRef.current = false;
-          
-          // Send the product details to the server when the connection is established
-          const payload = JSON.stringify({ brand, category, description });
-          socket.send(payload);
-        };
+    // Logic to establish or close WebSocket connection based on props
+    if (isStreaming && brand && category && description) {
+      // Only attempt to connect if not already connected
+      if (!wsRef.current) {
+        console.log('[StreamingText useEffect] Conditions met. Attempting to establish WebSocket connection to:', url);
+        try {
+          const socket = new WebSocket(url);
+          wsRef.current = socket; // Assign the socket to the ref immediately
 
-        socket.onmessage = (event) => {
-          // More detailed logging of the message
-          const message = event.data;
-          console.log('[WebSocket] Message received:', message);
-          
-          // Check for specific message types with detailed logging
-          if (message.startsWith('Agent(')) {
-            try {
-              const agentMatch = message.match(/^Agent\(([^)]+)\):/);
-              const agentName = agentMatch ? agentMatch[1] : "unknown";
-              const content = message.substring(message.indexOf(':') + 1).trim();
-              console.log('[Agent Message]:', {agent: agentName, content: content.substring(0, 50) + '...'});
-            } catch (err) {
-              console.error('[Agent Message Parse Error]:', err);
-            }
-          } else if (message.startsWith('AgentAction(')) {
-            try {
-              const agentMatch = message.match(/^AgentAction\(([^)]+)\):/);
-              const agentName = agentMatch ? agentMatch[1] : "unknown";
-              console.log('[Agent Action]:', {agent: agentName});
-            } catch (err) {
-              console.error('[Agent Action Parse Error]:', err);
-            }
-          } else if (message.startsWith('AgentTool(')) {
-            try {
-              const agentMatch = message.match(/^AgentTool\(([^)]+)\):/);
-              const agentName = agentMatch ? agentMatch[1] : "unknown";
-              console.log('[Agent Tool Use]:', {agent: agentName});
-            } catch (err) {
-              console.error('[Agent Tool Parse Error]:', err);
-            }
-          } else if (message.startsWith('SystemMessage:')) {
-            console.log('[System Message]:', message.substring(14));
-          } else if (message.startsWith('PhaseStart:')) {
-            console.log('[Phase Start]:', message.substring(11));
-          } else if (message.startsWith('PhaseSummary(')) {
-            try {
-              const phaseMatch = message.match(/^PhaseSummary\(([^)]+)\):/);
-              const phaseName = phaseMatch ? phaseMatch[1] : "unknown";
-              console.log('[Phase Summary]:', {phase: phaseName});
-            } catch (err) {
-              console.error('[Phase Summary Parse Error]:', err);
-            }
-          } else if (message.startsWith('FinalSummary:')) {
-            console.log('[Final Summary]:', message.substring(13).substring(0, 50) + '...');
-          } else if (message.startsWith('CarbonFootprint:')) {
-            console.log('[Carbon Footprint]:', message.substring(16));
-          } else if (message.startsWith('AgentStatus(')) {
-            try {
-              const statusMatch = message.match(/^AgentStatus\(([^)]+)\):/);
-              const agentName = statusMatch ? statusMatch[1] : "unknown";
-              console.log('[Agent Status]:', {agent: agentName});
-            } catch (err) {
-              console.error('[Agent Status Parse Error]:', err);
-            }
-          }
-          
-          setText((prev) => {
-            // This ensures we're getting each message on its own line
-            const newText = prev + message + "\n";
-            console.log(`[Text State] Lines count: ${newText.split('\n').length}`);
-            return newText;
-          });
-          
-          // Auto-scroll content as it streams in
-          if (contentRef.current) {
-            contentRef.current.scrollTop = contentRef.current.scrollHeight;
-          }
-          
-          // Check if the analysis is complete
-          if (message === "AnalysisComplete") {
-            console.log('[Analysis Complete]');
-            onStreamingComplete?.();
-          }
-        };
+          socket.onopen = () => {
+            console.log('[StreamingText WebSocket] Connection opened.');
+            setIsConnected(true);
+            setError(null);
+            setText(''); // Clear previous text
+            hasInitializedRef.current = true; // Mark that we've initialized a connection attempt
+            
+            const payload = JSON.stringify({ brand, category, description });
+            console.log('[StreamingText WebSocket] Sending payload:', payload);
+            socket.send(payload);
+          };
 
-        socket.onclose = () => {
+          socket.onmessage = (event) => {
+            const message = event.data;
+            console.log('[StreamingText WebSocket] Message received:', message);
+            
+            // Existing detailed message logging can remain here...
+            if (message.startsWith('Agent(')) {
+              try {
+                const agentMatch = message.match(/^Agent\(([^)]+)\):/);
+                const agentName = agentMatch ? agentMatch[1] : "unknown";
+                const content = message.substring(message.indexOf(':') + 1).trim();
+                console.log('[Agent Message]:', {agent: agentName, content: content.substring(0, 50) + '...'});
+              } catch (err) {
+                console.error('[Agent Message Parse Error]:', err);
+              }
+            } else if (message.startsWith('AgentAction(')) {
+              try {
+                const agentMatch = message.match(/^AgentAction\(([^)]+)\):/);
+                const agentName = agentMatch ? agentMatch[1] : "unknown";
+                console.log('[Agent Action]:', {agent: agentName});
+              } catch (err) {
+                console.error('[Agent Action Parse Error]:', err);
+              }
+            } else if (message.startsWith('AgentTool(')) {
+              try {
+                const agentMatch = message.match(/^AgentTool\(([^)]+)\):/);
+                const agentName = agentMatch ? agentMatch[1] : "unknown";
+                console.log('[Agent Tool Use]:', {agent: agentName});
+              } catch (err) {
+                console.error('[Agent Tool Parse Error]:', err);
+              }
+            } else if (message.startsWith('SystemMessage:')) {
+              console.log('[System Message]:', message.substring(14));
+            } else if (message.startsWith('PhaseStart:')) {
+              console.log('[Phase Start]:', message.substring(11));
+            } else if (message.startsWith('PhaseSummary(')) {
+              try {
+                const phaseMatch = message.match(/^PhaseSummary\(([^)]+)\):/);
+                const phaseName = phaseMatch ? phaseMatch[1] : "unknown";
+                console.log('[Phase Summary]:', {phase: phaseName});
+              } catch (err) {
+                console.error('[Phase Summary Parse Error]:', err);
+              }
+            } else if (message.startsWith('FinalSummary:')) {
+              console.log('[Final Summary]:', message.substring(13).substring(0, 50) + '...');
+            } else if (message.startsWith('CarbonFootprint:')) {
+              console.log('[Carbon Footprint]:', message.substring(16));
+            } else if (message.startsWith('AgentStatus(')) {
+              try {
+                const statusMatch = message.match(/^AgentStatus\(([^)]+)\):/);
+                const agentName = statusMatch ? statusMatch[1] : "unknown";
+                console.log('[Agent Status]:', {agent: agentName});
+              } catch (err) {
+                console.error('[Agent Status Parse Error]:', err);
+              }
+            }
+
+            setText((prev) => prev + message + "\n");
+            
+            if (contentRef.current) {
+              contentRef.current.scrollTop = contentRef.current.scrollHeight;
+            }
+            
+            if (message === "AnalysisComplete") {
+              console.log('[StreamingText WebSocket] AnalysisComplete message received.');
+              onStreamingComplete?.();
+            }
+          };
+
+          socket.onclose = (event) => {
+            console.log('[StreamingText WebSocket] Connection closed.', event.reason, event.code);
+            setIsConnected(false);
+            // Only call onStreamingComplete if the connection was intentionally closed after starting.
+            // Avoid calling it if the connection failed to open.
+            if (hasInitializedRef.current && !error) { 
+              onStreamingComplete?.();
+            }
+          };
+
+          socket.onerror = (errEvent) => {
+            // Type assertion for errEvent if needed, or use a generic error.
+            const errorMessage = 'WebSocket error occurred. Check console for details.';
+            console.error('[StreamingText WebSocket] Error:', errEvent);
+            setError(errorMessage);
+            setIsConnected(false);
+            // Potentially call onStreamingComplete here if an error means the stream is over.
+            // onStreamingComplete?.(); 
+          };
+        } catch (err) {
+          console.error('[StreamingText useEffect] Error establishing WebSocket connection:', err);
+          setError('Failed to initialize WebSocket connection.');
           setIsConnected(false);
-          if (hasInitializedRef.current) {
-            onStreamingComplete?.();
-          }
-        };
-
-        socket.onerror = (err) => {
-          setError('Failed to connect to server. Please try again later.');
-          console.error('WebSocket error:', err);
-        };
-      } catch (err) {
-        setError('Failed to connect to server. Please try again later.');
-        console.error('WebSocket connection error:', err);
+        }
+      }
+    } else {
+      // Conditions for streaming not met (e.g., isStreaming is false)
+      // If there's an existing connection, close it.
+      if (wsRef.current) {
+        console.log('[StreamingText useEffect] isStreaming is false or product details missing. Closing existing WebSocket.');
+        wsRef.current.close();
+        wsRef.current = null; // Clear the ref
+        setIsConnected(false);
       }
     }
 
-    // Cleanup on unmount or when streaming stops
+    // Cleanup function: will run when component unmounts or dependencies change
     return () => {
       if (wsRef.current) {
+        console.log('[StreamingText useEffect Cleanup] Closing WebSocket connection due to unmount or prop change.');
         wsRef.current.close();
         wsRef.current = null;
         setIsConnected(false);
