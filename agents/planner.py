@@ -16,13 +16,13 @@ async def planner_phase(state: FootprintState) -> Dict[str, Any]:
     state["markdown"] = page.markdown
     state["product_image_urls"] = list(page.images.keys())
 
-    brand = page.query_markdown("What is the brand of the product in the markdown below? Return only the simple brand name, not a description of the product.")
-    category = page.query_markdown("What is the category of the product in the markdown below, in very simple terms, that don't include the brand or very descriptive details? For example, a bike, t-shirt, office chair, or notebook, rather than something more specific like a blue notebook or an ergonomic office chair.")
-    description = page.query_markdown("What is a very brief description of the product in the markdown below? Return a single sentence, no more than 20 words.")
+    state.brand = page.query_markdown("What is the brand of the product in the markdown below? Return only the simple brand name, not a description of the product.")
+    state.category = page.query_markdown("What is the category of the product in the markdown below, in very simple terms, that don't include the brand or very descriptive details? For example, a bike, t-shirt, office chair, or notebook, rather than something more specific like a blue notebook or an ergonomic office chair.")
+    state.description = page.query_markdown("What is a very brief description of the product in the markdown below? Return a single sentence, no more than 20 words.")
     
     # Initial agent messages showing reasoning, incorporating the dynamic product details
     agent_messages = [
-        {"role": "ai", "content": f"Received product for analysis: Brand='{brand}', Category='{category}', Description='{description}'."},
+        {"role": "ai", "content": f"Received product for analysis: Brand='{state.brand}', Category='{state.category}', Description='{state.description}'."},
         {"role": "ai", "content": "Initializing environmental assessment workflow..."},
         {"role": "ai", "content": "Planner is preparing to delegate tasks to specialized agents."}
     ]
