@@ -95,7 +95,7 @@ async def websocket_endpoint(websocket: WebSocket):
             "url": product_url,
             "user_input": f"Analyze product from URL: {product_url}", # This can be used by the planner if needed
             "messages": [("human", f"Analyze carbon footprint for product at URL: {product_url}")]
-            # brand, category, description will be populated by the page_analysis_phase and planner_phase
+            # brand, category, short_description, long_description, product_image_urls will be populated by page_analysis_phase
         }
         
         # Stream the workflow execution
