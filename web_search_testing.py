@@ -52,7 +52,10 @@ tools = [
 ]
 
 if __name__ == "__main__":
-    messages = [{"role": "user", "content": "What is the current population of the world?"}]
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant. Use the available tools to answer questions that require up-to-date information or external knowledge."},
+        {"role": "user", "content": "What is the current population of the world?"}
+    ]
 
     # First call to the model
     print("Calling model with initial message...")
