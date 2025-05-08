@@ -21,24 +21,25 @@ def perform_web_search(query: str) -> str:
     return f"Mock search result for '{query}': The current world population is approximately 8.1 billion people as of late 2024."
 
 # Define the tool schema for the o3-2025-04-16 model
-# Define the tool schema for the o3-2025-04-16 model
 tools = [
     {
         "type": "function",
-        "name": "perform_web_search", # Moved name here
-        "description": "Performs a web search to find information online.", # Moved description here
-        "parameters": { # Moved parameters here
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "The search query."
-                }
+        "function": { # Function definition must be nested under 'function' key
+            "name": "perform_web_search",
+            "description": "Performs a web search to find information online.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The search query."
+                    }
+                },
+                "required": ["query"],
+                "additionalProperties": False
             },
-            "required": ["query"],
-            "additionalProperties": False
-        },
-        "strict": True # Moved strict here - Recommended for reliable function calls
+            # 'strict' is not a valid parameter here, removing it.
+        }
     }
 ]
 
