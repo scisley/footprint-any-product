@@ -28,7 +28,7 @@ async def planner_phase(state: FootprintState) -> Dict[str, Any]:
     return {
         "planner": {
             "messages": agent_messages,
-            "summary": f"Planning complete for: {state.brand} - {state.description}. Delegating to specialized agents.",
+            "summary": f"Planning complete for: {state['brand']} - {state['description']}. Delegating to specialized agents.",
             "carbon": None, # Planner does not calculate carbon
         },
         "brand": brand, 
