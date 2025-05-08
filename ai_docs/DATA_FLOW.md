@@ -112,7 +112,7 @@ if "Thought:" in content:
 The WebSocket serves as the real-time communication channel between backend and frontend:
 
 1. Client connects to `/ws` endpoint
-2. Client sends product URL to analyze
+2. Client sends product brand, category, and description to analyze.
 3. Server streams standardized messages to client
 4. Connection remains open until analysis completes
 
