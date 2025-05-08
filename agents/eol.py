@@ -6,6 +6,8 @@ from tools.emissions_factors import emissions_factor_finder_tool
 from state import FootprintState
 import os
 import logging
+import yaml
+from pathlib import Path
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -15,11 +17,12 @@ class EOLResponse(BaseModel):
     carbon: float = Field(description="The carbon footprint of the end-of-life process in kg of CO2e.")
     summary: str = Field(description="A 2 sentence summary of the end-of-life LCA process.")
 
-system_prompt = """
-You are a end-of-life expert. You need to estimate the carbon footprint of
-the end-of-life for a product. You must provide a final response in kg of
-CO2e. Use your tools, but if unknown values remain, use reasonable assumptions. 
-"""
+# Load prompts from YAML
+_PROMPTS_FILE = Path(__file__).parent / "prompts.yaml"
+with open(_PROMPTS_FILE, 'r') as f:
+    _prompts_data = yaml.safe_load(f)
+
+eol_agent_prompt_text = _prompts_data['eol_agent_prompt']
 
 logger.info(f"Creating EOL agent with OPENAI_API_KEY: {bool(os.environ.get('OPENAI_API_KEY'))}")
 # Pass the API key explicitly
@@ -31,7 +34,7 @@ eol_agent = create_react_agent(
     #model=ChatOpenAI(model_name="o3"),
     model=ChatOpenAI(model_name="gpt-4o", temperature=0, openai_api_key=openai_api_key),
     tools=[emissions_factor_finder_tool, calculator],
-    prompt=system_prompt,
+    prompt=eol_agent_prompt_text,
     response_format=EOLResponse,
     name="eol_agent"
 )
