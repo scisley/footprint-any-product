@@ -21,6 +21,7 @@ class FootprintState(TypedDict):
     material_description: str # A natural language description of the materials in the product
     product_image_urls: list[str]
     weight_kg: float
+    materials: PhaseData
     manufacturing: PhaseData
     packaging: PhaseData
     transportation: PhaseData

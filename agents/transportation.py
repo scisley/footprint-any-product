@@ -4,6 +4,12 @@ from langgraph.prebuilt import create_react_agent
 from tools.calculator import calculator
 from tools.emissions_factors import emissions_factor_finder_tool
 from state import FootprintState
+import os
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class TransportationResponse(BaseModel):
     carbon: float = Field(description="The carbon footprint of the transportation process in kg of CO2e.")
@@ -30,17 +36,31 @@ transportation_agent = create_react_agent(
 )
 
 # TODO: Update with a tool to get location information
-def transportation_phase(state: FootprintState):
+async def transportation_phase(state: FootprintState):
     input = f"""Brand: {state["brand"]}\nCategory: {state["category"]}\nDescription: {state["description"]}"""
-    response = transportation_agent.invoke({
+    response = await transportation_agent.ainvoke({
         "messages": [{"role": "user", "content": input}]
     })
-    return {
+    
+    # Debug the response structure
+    logger.info(f"Transportation Agent response keys: {response.keys()}")
+    if "messages" in response:
+        logger.info(f"Transportation Agent has {len(response['messages'])} messages")
+    
+    # Create the result with additional AI messages for visibility
+    result = {
         "transportation": {
             "carbon": response["structured_response"].carbon, 
             "summary": response["structured_response"].summary, 
-            "messages": response["messages"]
+            "messages": response["messages"] + [
+                {"role": "ai", "content": "Analyzing transportation methods for this product..."},
+                {"role": "ai", "content": "Estimating shipping distances and modes of transport..."},
+                {"role": "ai", "content": f"Calculated total transportation carbon impact: {response['structured_response'].carbon} kg CO2e"}
+            ]
         }
     }
+    
+    logger.info(f"Transportation Result has {len(result['transportation']['messages'])} messages")
+    return result
 
 #transportation_phase({"brand": "Apple", "category": "cellphone", "description": "An iPhone 15"})

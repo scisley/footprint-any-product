@@ -4,13 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Footprint-Any-Product is a sustainability analysis tool that evaluates the environmental impact of products based on their URL. The system uses a multi-agent architecture powered by LangGraph and LangChain to assess different aspects of a product's lifecycle (materials, manufacturing, packaging, transport, usage, and end-of-life) and provides an overall carbon footprint score.
+Footprint-Any-Product is a sustainability analysis tool that evaluates the environmental impact of products based on their URL or name. The system uses a multi-agent architecture powered by LangGraph and LangChain to assess different aspects of a product's lifecycle (materials, manufacturing, packaging, transport, usage, and end-of-life) and provides an overall carbon footprint score.
 
 ## Repository Structure
 
 - **Backend**: Python-based FastAPI service with LangGraph/LangChain workflow
+  - Multi-agent system in `agents/` directory
+  - Tools for calculations in `tools/` directory
+  - State management in `state.py`
 - **Frontend**: Next.js application with React 19 showing analysis results
-- **Notebooks**: Example implementations and sandbox environments
+  - UI components in `frontend/src/components/`
+  - Page definitions in `frontend/src/app/`
+  - Real-time streaming support via WebSockets
+- **Notebooks**: Example implementations and sandbox environments in `notebooks/`
 
 ## Setup Instructions
 
@@ -36,9 +42,9 @@ Footprint-Any-Product is a sustainability analysis tool that evaluates the envir
 
 ### Frontend Setup
 
-1. Navigate to the frontend Next.js project:
+1. Navigate to the frontend directory:
    ```bash
-   cd frontend/footprint-any-product
+   cd frontend
    ```
 
 2. Install dependencies (using pnpm):
@@ -62,21 +68,21 @@ jupyter notebook notebooks/examples/sandbox.ipynb
 
 ### Frontend
 
-Start the Next.js development server:
+Start the Next.js development server with Turbopack:
 ```bash
-cd frontend/footprint-any-product
-pnpm dev
+cd frontend
+pnpm dev --turbopack
 ```
 
 Build the frontend:
 ```bash
-cd frontend/footprint-any-product
+cd frontend
 pnpm build
 ```
 
 Run linting:
 ```bash
-cd frontend/footprint-any-product
+cd frontend
 pnpm lint
 ```
 
@@ -96,22 +102,40 @@ The project uses a multi-agent architecture to analyze different aspects of a pr
 
 ### Data Flow
 
-1. User submits a product URL through the frontend
-2. Backend processes the URL through the agent system
-3. Each agent performs specialized analysis
-4. Results are consolidated and returned to the frontend
+1. User submits a product URL or name through the frontend
+2. Backend processes the input through the agent system
+3. Each agent performs specialized analysis using LangGraph
+4. Results are streamed in real-time to the frontend via WebSockets
 5. Frontend displays the carbon footprint score and detailed breakdown
+
+### Key Components
+
+- **State Management**: `state.py` defines the `FootprintState` TypedDict that contains all shared data between agents
+- **Agent Definition**: Each agent in the `agents/` directory follows a similar pattern with a system prompt and LangGraph agent definition
+- **Tools**: Reusable tools in the `tools/` directory, including:
+  - `calculator.py`: Performs mathematical calculations
+  - `emissions_factors.py`: Estimates carbon emissions for various processes
+- **Frontend Components**:
+  - `ProductInput.tsx`: Handles user input of product URLs or names
+  - `StreamingText.tsx`: Manages WebSocket connections for real-time updates
 
 ### External APIs
 
 The system uses the Muir API to fetch carbon footprint data:
-- API Client: `frontend/muir_api_client.py`
 - Requires `MUIR_API_KEY` environment variable
 - Provides functions for getting and creating carbon footprint runs
 
-## Technical Notes
+## Technical Stack
 
-- The frontend uses React 19 with Next.js 15 and Tailwind CSS
-- The backend uses FastAPI with LangGraph and LangChain
-- The project uses PostgreSQL with pgvector for vector database functionality
-- LangSmith is used for workflow monitoring and debugging
+- **Frontend**: 
+  - React 19 with Next.js 15.3.2
+  - Tailwind CSS 4
+  - TypeScript
+  - WebSocket for real-time streaming
+
+- **Backend**:
+  - FastAPI
+  - LangGraph and LangChain for agent workflows
+  - OpenAI models (gpt-4o)
+  - PostgreSQL with pgvector for vector database
+  - LangSmith for workflow monitoring
