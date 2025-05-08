@@ -20,6 +20,7 @@ email_validator==2.2.0
 executing==2.2.0
 fastapi==0.115.12
 fastapi-cli==0.0.7
+firecrawl-py==2.5.3
 frozenlist==1.6.0
 greenlet==3.2.1
 h11==0.16.0
