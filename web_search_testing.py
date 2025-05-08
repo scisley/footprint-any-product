@@ -8,23 +8,22 @@ client = OpenAI() # Assumes OPENAI_API_KEY is in environment
 
 def perform_web_search(query: str) -> str:
     """
-    Simulates performing a web search and returns a mock result.
+    Performs a web search using the specified method and returns the result.
 
     Args:
         query: The search query string.
 
     Returns:
-        A string representing the search result.
+        The output text from the web search response.
     """
-    # This function simulates the action that would typically be performed by a tool
-    # potentially involving a different model or external service (like gpt-4.1 with web search).
-    print(f"Simulating web search for query: '{query}' (Conceptual tool execution)")
-    # In a real application, this would call a web search API
-    # Return a mock result relevant to the query
-    if "weather" in query.lower() or "seattle" in query.lower():
-        return f"Mock search result for '{query}': The weather in Seattle today is partly cloudy with a high of 65°F (18°C) and a low of 50°F (10°C). There is a slight chance of rain in the evening."
-    else:
-        return f"Mock search result for '{query}': The current world population is approximately 8.1 billion people as of late 2024."
+    print(f"Attempting web search for query: '{query}' using client.responses.create with gpt-4.1")
+    # Implementing the web search using the provided snippet
+    response = client.responses.create(
+        model="gpt-4.1",
+        tools=[{"type": "web_search_preview"}],
+        input=query # Use the query passed to the function
+    )
+    return response.output_text
 
 # Define the tool schema for the o3-2025-04-16 model
 tools = [
