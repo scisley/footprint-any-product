@@ -11,7 +11,6 @@ from langgraph.graph import StateGraph, START, END
 
 # Local application imports (absolute imports from project root)
 from state import FootprintState
-from page_analyzer import PageAnalyzer
 from agents.planner import planner_phase
 from agents.eol import eol_phase
 from agents.materials import materials_phase
