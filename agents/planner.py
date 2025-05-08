@@ -1,41 +1,41 @@
 import asyncio
 from typing import Dict, Any
 from state import FootprintState
-from page_analyzer import PageAnalyzer
+# PageAnalyzer import is no longer needed here
 
 async def planner_phase(state: FootprintState) -> Dict[str, Any]:
     """
-    Initial node that analyzes the product details and sets up the workflow.
-    Takes the user input and determines product characteristics.
+    Initial node that sets up the workflow based on pre-analyzed product details.
+    Receives product characteristics (brand, category, description) from the state.
     """
-    # Small delay to help with streaming
     await asyncio.sleep(0.2)
 
-    page = PageAnalyzer(state["url"])
-    state["url"] = page.url # trimmed url
-    state["markdown"] = page.markdown
-    state["product_image_urls"] = list(page.images.keys())
+    # Product details are now expected to be in the state from page_analysis_phase
+    brand = state.get("brand", "N/A")
+    category = state.get("category", "N/A")
+    description = state.get("description", "N/A")
+    product_url = state.get("url", "N/A") # Use the URL from the state
 
-    state.brand = page.query_markdown("What is the brand of the product in the markdown below? Return only the simple brand name, not a description of the product.")
-    state.category = page.query_markdown("What is the category of the product in the markdown below, in very simple terms, that don't include the brand or very descriptive details? For example, a bike, t-shirt, office chair, or notebook, rather than something more specific like a blue notebook or an ergonomic office chair.")
-    state.description = page.query_markdown("What is a very brief description of the product in the markdown below? Return a single sentence, no more than 20 words.")
-    
-    # Initial agent messages showing reasoning, incorporating the dynamic product details
     agent_messages = [
-        {"role": "ai", "content": f"Received product for analysis: Brand='{state.brand}', Category='{state.category}', Description='{state.description}'."},
+        {"role": "ai", "content": f"Planner received product for analysis: Brand='{brand}', Category='{category}', Description='{description}' from URL '{product_url}'."},
         {"role": "ai", "content": "Initializing environmental assessment workflow..."},
         {"role": "ai", "content": "Planner is preparing to delegate tasks to specialized agents."}
     ]
     
-    # The planner's role is now primarily to kick off the process and provide initial messages.
-    # It confirms or passes through brand, category, and description.
+    # The planner's role is to confirm or pass through brand, category, and description,
+    # and potentially make high-level decisions.
+    # It also needs to return these fields so they persist in the state for other agents.
     return {
         "planner": {
             "messages": agent_messages,
             "summary": f"Planning complete for: {state.brand} - {state.description}. Delegating to specialized agents.",
             "carbon": None, # Planner does not calculate carbon
         },
-        "brand": state.get("brand", "Unknown Brand"), 
-        "category": state.get("category", "Unknown Category"),
-        "description": state.get("description", "No description provided"),
+        "brand": brand, 
+        "category": category,
+        "description": description,
+        "url": product_url, # Pass along the URL
+        "markdown": state.get("markdown"), # Pass along markdown
+        "product_image_urls": state.get("product_image_urls"), # Pass along image URLs
+        # Any other fields populated by page_analysis_phase that subsequent agents might need
     }

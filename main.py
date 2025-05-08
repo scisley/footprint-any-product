@@ -20,6 +20,7 @@ from langgraph.graph import StateGraph, START, END
 
 # Local application imports
 from state import FootprintState
+from page_analyzer import PageAnalyzer # Added import
 from agents.planner import planner_phase
 from agents.eol import eol_phase
 from agents.materials import materials_phase
@@ -53,6 +54,34 @@ def read_item(item_id: int, q: Union[str, None] = None):
     """Example endpoint with path and query parameters."""
     return {"item_id": item_id, "q": q}
 
+# --- Page Analysis Phase ---
+
+async def page_analysis_phase(state: FootprintState) -> Dict[str, Any]:
+    """
+    Analyzes the product URL using PageAnalyzer to extract initial product details.
+    """
+    await asyncio.sleep(0.1) # Small delay for streaming appearance
+    
+    product_url = state["url"]
+    page = PageAnalyzer(product_url)
+
+    # Extracted data
+    brand = page.query_markdown("What is the brand of the product in the markdown below? Return only the simple brand name, not a description of the product.")
+    category = page.query_markdown("What is the category of the product in the markdown below, in very simple terms, that don't include the brand or very descriptive details? For example, a bike, t-shirt, office chair, or notebook, rather than something more specific like a blue notebook or an ergonomic office chair.")
+    description = page.query_markdown("What is a very brief description of the product in the markdown below? Return a single sentence, no more than 20 words.")
+    
+    return {
+        "url": page.url, # Potentially trimmed/cleaned URL
+        "markdown": page.markdown,
+        "product_image_urls": list(page.images.keys()),
+        "brand": brand,
+        "category": category,
+        "description": description,
+        "messages": state.get("messages", []) + [ # Append to existing messages
+            {"role": "ai", "content": f"Page analysis complete for {page.url}. Brand: {brand}, Category: {category}."}
+        ]
+    }
+
 # --- LangGraph Setup ---
 
 def setup_graph() -> Any:
@@ -83,9 +112,13 @@ def setup_graph() -> Any:
     # Initialize the workflow graph
     graph_builder = StateGraph(FootprintState)
     
+    # Add page analysis node
+    graph_builder.add_node("page_analysis_phase", page_analysis_phase)
+    graph_builder.add_edge(START, "page_analysis_phase") # Start with page analysis
+
     # Add planner node to the graph using the imported planner_phase
     graph_builder.add_node("planner_phase", planner_phase)
-    graph_builder.add_edge(START, "planner_phase")
+    graph_builder.add_edge("page_analysis_phase", "planner_phase") # Planner runs after page analysis
     
     # Add all agent nodes to the graph
     graph_builder.add_node("materials_phase", materials_phase)
@@ -397,32 +430,33 @@ async def websocket_endpoint(websocket: WebSocket):
         # Receive the product details from the client
         data = await websocket.receive_text()
         request_data = json.loads(data)
-        product_brand = request_data.get("brand", "")
-        product_category = request_data.get("category", "")
-        product_description = request_data.get("description", "")
         
-        if not (product_brand and product_category and product_description):
-            await websocket.send_text("ErrorMessage: Missing product brand, category, or description.")
-            await websocket.close()
+        # Extract the product URL from the request_data
+        product_url = request_data.get("url")
+
+        if not product_url:
+            await websocket.send_text("ErrorMessage: Product URL was not provided by the client.")
             return
 
         # Initial messages to client
-        await websocket.send_text("SystemMessage: Starting carbon footprint analysis")
+        await websocket.send_text(f"SystemMessage: Starting carbon footprint analysis for URL: {product_url}")
         await websocket.send_text("SystemMessage: Processing carbon footprint analysis in real-time")
         
         # Initialize and run the LangGraph workflow
         graph = setup_graph()
         config = {"configurable": {"thread_id": "websocket-session"}}
         
+        # Prepare the initial state for the graph, primarily with the URL
+        initial_graph_state = {
+            "url": product_url,
+            "user_input": f"Analyze product from URL: {product_url}", # This can be used by the planner if needed
+            "messages": [("human", f"Analyze carbon footprint for product at URL: {product_url}")]
+            # brand, category, description will be populated by the page_analysis_phase and planner_phase
+        }
+        
         # Stream the workflow execution
         stream = graph.astream(
-            {
-                "user_input": f"Brand: {product_brand}, Category: {product_category}, Description: {product_description}",
-                "brand": product_brand,
-                "category": product_category,
-                "description": product_description,
-                "messages": [("human", f"Analyze carbon footprint for Brand: {product_brand}, Category: {product_category}, Description: {product_description}")]
-            },
+            initial_graph_state, # Pass the state with the URL
             config,
             stream_mode=["updates", "values"]
         )
@@ -456,10 +490,20 @@ async def websocket_endpoint(websocket: WebSocket):
                     print(f"Current state keys: {list(event.keys())}")
                     
                     # Check for agent outputs and node outputs
-                    # Ensure "planner" is included in the list of phases to check
-                    for phase_name in ["planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"]:
+                    # Ensure "page_analysis", "planner" are included in the list of phases to check
+                    for phase_name in ["page_analysis", "planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"]:
                         # Check for direct phase keys in the state (event is the full state in "values" mode)
-                        if phase_name in event:
+                        # Note: page_analysis_phase returns its data at the top level of the state, not nested under "page_analysis"
+                        if phase_name == "page_analysis": # Special handling for page_analysis output
+                            if "brand" in event and "category" in event and "description" in event: # Check if page_analysis has run
+                                # For page_analysis, we don't expect a nested structure like event["page_analysis"]
+                                # Its results (brand, category, etc.) are directly in the 'event' (state)
+                                # We can send a system message or specific updates if needed
+                                # For now, we'll let the planner_phase handle displaying these.
+                                print(f"Page analysis data found in state: Brand='{event.get('brand')}', Category='{event.get('category')}'")
+                            continue # Move to next phase_name check
+
+                        if phase_name in event: # For planner and other agents
                             phase_key = phase_name
                             phase_data = event[phase_name] # e.g. event["planner"] or event["materials"]
                         else:
@@ -535,20 +579,31 @@ async def websocket_endpoint(websocket: WebSocket):
                             phase_key = key.replace("_phase", "")
                             print(f"Converting node name {key} to phase key {phase_key}")
                         
-                        # Handle lifecycle phase updates
                         # Handle lifecycle phase updates, including "planner"
-                        if phase_key in ["planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"] and isinstance(value, dict):
-                            # Ensure phase_key exists in value if value is a dict of dicts (e.g. node output)
+                        # page_analysis_phase updates are handled differently as its output is top-level state keys
+                        if key == "page_analysis_phase": # This key represents the node name
+                            # The 'value' here will be the dictionary returned by page_analysis_phase
+                            # e.g., {"url": ..., "brand": ..., "category": ..., "description": ..., "messages": ...}
+                            # We can send a system message or specific updates based on this.
+                            # For example, send the messages from page_analysis_phase
+                            if isinstance(value, dict) and "messages" in value:
+                                await send_agent_messages(websocket, "page_analysis", value["messages"])
+                            # Other data like brand, category will be picked up by the planner.
+                            print(f"Update from page_analysis_phase: {list(value.keys()) if isinstance(value, dict) else 'Non-dict value'}")
+
+                        elif phase_key in ["planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"] and isinstance(value, dict):
+                            # This handles updates from the planner and other lifecycle agents.
+                            # 'value' for these nodes is typically structured like: {"planner": {"messages": ..., "summary": ...}}
+                            # So, we need to access value[phase_key]
                             if phase_key in value and isinstance(value[phase_key], dict):
                                 phase_data_to_process = value[phase_key]
                                 messages_count = len(phase_data_to_process.get("messages", [])) if isinstance(phase_data_to_process.get("messages"), list) else 0
                                 await websocket.send_text(f"SystemMessage: Processing {phase_key} phase with {messages_count} messages")
                                 await process_phase_update(websocket, phase_key, phase_data_to_process)
-                            # If 'value' itself is the data for the phase (e.g. for planner_phase where node output is {"planner": data, "brand":...})
-                            # This case is handled if value[phase_key] is the correct data.
-                            # The previous logic for react agents was value[phase_key]
-                            # For planner, if key is "planner_phase", value is {"planner": data, "brand":...}, phase_key is "planner".
-                            # So value[phase_key] (i.e. value["planner"]) is correct.
+                            # This else-if handles cases where the node's output (value) is directly the data for that phase_key.
+                            # This might happen if a node named "planner" directly returns its data without nesting it under another "planner" key.
+                            # However, our planner_phase returns {"planner": {...}, "brand": ..., ...}
+                            # So the above `if phase_key in value` is more appropriate for planner.
                         
                         # Handle final summary
                         elif key == "summarizer":
