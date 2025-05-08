@@ -237,35 +237,28 @@ async def websocket_endpoint(websocket: WebSocket):
                             phase_key_for_processing = key.replace("_phase", "")
                             print(f"Converting node name {key} to phase key {phase_key_for_processing}")
                         
-                        # Handle lifecycle phase updates, including "planner"
-                        # page_analysis_phase updates are handled differently as its output is top-level state keys
-                        if key == "page_analysis_phase": # This key represents the node name
-                            # The 'value' here will be the dictionary returned by page_analysis_phase
-                            # e.g., {"url": ..., "brand": ..., "category": ..., "description": ..., "messages": ...}
-                            if isinstance(value, dict) and "messages" in value:
-                                await send_agent_messages(websocket, "page_analysis", value["messages"])
-                            print(f"Update from page_analysis_phase: {list(value.keys()) if isinstance(value, dict) else 'Non-dict value'}")
-
                         # This handles updates from the planner and other lifecycle agents.
+                        # Note: page_analysis_phase updates are now primarily handled in the 'values' mode
                         # 'value' for these nodes is typically structured like: {"planner": {"messages": ..., "summary": ...}}
                         # or {"materials": {...}} if the node name was "materials_phase" and we converted it.
                         # So, we need to access value[phase_key_for_processing] if the node output is nested.
-                        # However, our agent phases (materials_phase, etc.) return a dict like {"materials": data}
+                        # However, our agent phases (materials_phase, etc.) return a dict like {"materials": result}
                         # So, 'value' will be {"materials": data}. We need to process value[phase_key_for_processing].
-                        elif phase_key_for_processing in ["planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"]:
+                        if phase_key_for_processing in ["planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"]:
                             # Check if the actual data for the phase is nested under the phase_key_for_processing within the 'value' dict
                             if isinstance(value, dict) and phase_key_for_processing in value and isinstance(value[phase_key_for_processing], dict):
                                 phase_data_to_process = value[phase_key_for_processing]
                                 messages_count = len(phase_data_to_process.get("messages", [])) if isinstance(phase_data_to_process.get("messages"), list) else 0
-                                await websocket.send_text(f"SystemMessage: Processing {phase_key_for_processing} phase with {messages_count} messages")
+                                await websocket.send_text(f"SystemMessage: Processing {phase_key_for_processing} phase update with {messages_count} messages")
+                                # Use the existing helper to process messages, carbon, and summary from this update chunk
                                 await process_phase_update(websocket, phase_key_for_processing, phase_data_to_process)
                             # This case handles if the node's output (value) is *directly* the data for that phase.
                             # This shouldn't happen for our current agent structure but is a fallback.
-                            elif isinstance(value, dict) and not (phase_key_for_processing in value and isinstance(value[phase_key_for_processing], dict)):
+                            # elif isinstance(value, dict) and not (phase_key_for_processing in value and isinstance(value[phase_key_for_processing], dict)):
                                 # This means 'value' itself is the data for the phase_key_for_processing
                                 # e.g. if node "materials" returned {"carbon": ..., "summary": ...} directly
-                                # This is unlikely given our agent structure `return {"materials": result}`
-                                print(f"Processing direct value for {phase_key_for_processing}")
+                                # This is unlikely given our agent structure `return {"materials": data}`
+                                # print(f"Processing direct value update for {phase_key_for_processing}")
                                 # await process_phase_update(websocket, phase_key_for_processing, value) # Potentially process 'value' directly
                         
                         # Handle final summary
@@ -274,17 +267,18 @@ async def websocket_endpoint(websocket: WebSocket):
                                 await process_summarizer_update(websocket, value)
                         
                         # Handle general system messages (if any are directly put into state under "messages" key by a node)
+                        # This might be redundant if messages are always nested under phase keys, but keep for robustness
                         elif key == "messages" and isinstance(value, list):
                             for msg_val in value: # Iterate through the list of messages
                                 if isinstance(msg_val, tuple) and len(msg_val) == 2 and msg_val[0] == "ai" and isinstance(msg_val[1], str):
                                      await websocket.send_text(f"SystemMessage: {msg_val[1]}")
-                                     await asyncio.sleep(0.1)
+                                     await asyncio.sleep(0.05)
                                 elif isinstance(msg_val, dict) and msg_val.get("role") == "ai" and msg_val.get("content"):
                                     await websocket.send_text(f"SystemMessage: {msg_val.get('content')}")
-                                    await asyncio.sleep(0.1)
+                                    await asyncio.sleep(0.05)
                 
                 # Small delay between updates
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.05) # Reduced delay slightly
                 
             except Exception as e:
                 print(f"Error processing update: {str(e)}")
