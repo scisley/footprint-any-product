@@ -22,6 +22,7 @@ from langgraph.graph import StateGraph, START, END
 
 # Local application imports
 from state import FootprintState
+from agents.planner import planner_phase
 from agents.eol import eol_phase
 from agents.materials import materials_phase
 from agents.packaging import packaging_phase
@@ -100,41 +101,9 @@ def setup_graph() -> Any:
     # Initialize the workflow graph
     graph_builder = StateGraph(FootprintState)
     
-    # Define product analysis planner node
-    async def planner(state: FootprintState) -> Dict[str, Any]:
-        """
-        Initial node that analyzes the product details and sets up the workflow.
-        Takes the user input and determines product characteristics.
-        """
-        # Small delay to help with streaming
-        await asyncio.sleep(0.2)
-
-        # Use the brand, category, description from the state
-        # These are now populated directly from the WebSocket message via the initial astream input
-        brand = state.get("brand", "Unknown Brand")
-        category = state.get("category", "Unknown Category")
-        description = state.get("description", "No description provided")
-        
-        # Initial agent messages showing reasoning, incorporating the dynamic product details
-        agent_messages = [
-            {"role": "ai", "content": f"Received product for analysis: Brand='{brand}', Category='{category}', Description='{description}'."},
-            {"role": "ai", "content": "Initializing environmental assessment workflow..."},
-            {"role": "ai", "content": "Planner is preparing to delegate tasks to specialized agents."}
-        ]
-        
-        # The planner's role is now primarily to kick off the process and provide initial messages.
-        # The actual brand, category, and description are already in the state.
-        # It can confirm or pass them through.
-        return {
-            "messages": agent_messages, # These messages will be added to the FootprintState
-            "brand": brand, # Ensure these are propagated if not already set by astream input
-            "category": category,
-            "description": description,
-        }
-    
-    # Add planner node to the graph
-    graph_builder.add_node("planner", planner)
-    graph_builder.add_edge(START, "planner")
+    # Add planner node to the graph using the imported planner_phase
+    graph_builder.add_node("planner_phase", planner_phase)
+    graph_builder.add_edge(START, "planner_phase")
     
     # Define materials phase example
     async def materials_phase_example(state: FootprintState) -> Dict[str, Any]:
@@ -267,10 +236,10 @@ def setup_graph() -> Any:
     graph_builder.add_node("use_phase", use_phase)
     graph_builder.add_node("eol_phase", eol_phase)
     
-    # Connect planner to all analysis phases
+    # Connect planner_phase to all analysis phases
     phases = ["materials_phase", "manufacturing_phase", "packaging_phase", "transportation_phase", "use_phase", "eol_phase"]
     for phase in phases:
-        graph_builder.add_edge("planner", phase)
+        graph_builder.add_edge("planner_phase", phase)
     
     # Define summarizer node to calculate total footprint
     async def summarizer(state: FootprintState) -> Dict[str, Any]:
@@ -628,15 +597,12 @@ async def websocket_endpoint(websocket: WebSocket):
                     print(f"Current state keys: {list(event.keys())}")
                     
                     # Check for agent outputs and node outputs
-                    for phase_name in ["materials", "manufacturing", "packaging", "transportation", "use", "eol"]:
-                        # Check for direct phase keys
+                    # Ensure "planner" is included in the list of phases to check
+                    for phase_name in ["planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"]:
+                        # Check for direct phase keys in the state (event is the full state in "values" mode)
                         if phase_name in event:
                             phase_key = phase_name
-                            phase_data = event[phase_name]
-                        # Also check for node keys (node_phase format)
-                        elif f"{phase_name}_phase" in event:
-                            phase_key = phase_name
-                            phase_data = event[f"{phase_name}_phase"]
+                            phase_data = event[phase_name] # e.g. event["planner"] or event["materials"]
                         else:
                             continue
                             
@@ -711,11 +677,19 @@ async def websocket_endpoint(websocket: WebSocket):
                             print(f"Converting node name {key} to phase key {phase_key}")
                         
                         # Handle lifecycle phase updates
-                        if phase_key in ["materials", "manufacturing", "packaging", "transportation", "use", "eol"] and isinstance(value, dict):
-                            # Send agent debug info as a formatted message to see in UI
-                            messages_count = len(value.get("messages", [])) if isinstance(value.get("messages"), list) else 0
-                            await websocket.send_text(f"SystemMessage: Processing {phase_key} phase with {messages_count} messages")
-                            await process_phase_update(websocket, phase_key, value)
+                        # Handle lifecycle phase updates, including "planner"
+                        if phase_key in ["planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"] and isinstance(value, dict):
+                            # Ensure phase_key exists in value if value is a dict of dicts (e.g. node output)
+                            if phase_key in value and isinstance(value[phase_key], dict):
+                                phase_data_to_process = value[phase_key]
+                                messages_count = len(phase_data_to_process.get("messages", [])) if isinstance(phase_data_to_process.get("messages"), list) else 0
+                                await websocket.send_text(f"SystemMessage: Processing {phase_key} phase with {messages_count} messages")
+                                await process_phase_update(websocket, phase_key, phase_data_to_process)
+                            # If 'value' itself is the data for the phase (e.g. for planner_phase where node output is {"planner": data, "brand":...})
+                            # This case is handled if value[phase_key] is the correct data.
+                            # The previous logic for react agents was value[phase_key]
+                            # For planner, if key is "planner_phase", value is {"planner": data, "brand":...}, phase_key is "planner".
+                            # So value[phase_key] (i.e. value["planner"]) is correct.
                         
                         # Handle final summary
                         elif key == "summarizer":

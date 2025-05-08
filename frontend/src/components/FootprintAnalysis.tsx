@@ -18,6 +18,7 @@ export function FootprintAnalysis({
   const [finalSummary, setFinalSummary] = useState<string>('');
   const [totalCarbonFootprint, setTotalCarbonFootprint] = useState<number | null>(null);
   const [agents, setAgents] = useState<Record<string, AgentData>>({
+    planner: { messages: [], summary: '', carbon: null, isCompleted: false },
     materials: { messages: [], summary: '', carbon: null, isCompleted: false },
     manufacturing: { messages: [], summary: '', carbon: null, isCompleted: false },
     packaging: { messages: [], summary: '', carbon: null, isCompleted: false },
@@ -55,6 +56,7 @@ export function FootprintAnalysis({
           setFinalSummary('');
           setTotalCarbonFootprint(null);
           setAgents({
+            planner: { messages: [], summary: '', carbon: null, isCompleted: false },
             materials: { messages: [], summary: '', carbon: null, isCompleted: false },
             manufacturing: { messages: [], summary: '', carbon: null, isCompleted: false },
             packaging: { messages: [], summary: '', carbon: null, isCompleted: false },
@@ -309,6 +311,12 @@ export function FootprintAnalysis({
 
   // Set up agent section styling configs
   const agentConfigs = {
+    planner: {
+      title: "Planning & Setup",
+      bgColor: "bg-slate-50 dark:bg-slate-900/30", // Using slate for a neutral planning color
+      textColor: "text-slate-800 dark:text-slate-200",
+      borderColor: "border-slate-200"
+    },
     materials: {
       title: "Materials",
       bgColor: "bg-rose-50 dark:bg-rose-900/30",
@@ -348,7 +356,7 @@ export function FootprintAnalysis({
   };
 
   // Agent execution order
-  const agentOrder = ["materials", "manufacturing", "packaging", "transportation", "use", "eol"];
+  const agentOrder = ["planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"];
 
   // Show nothing if we're not streaming and have no data
   if (!isStreaming && !isConnecting && !Object.values(agents).some(agent => agent.messages.length > 0)) {
