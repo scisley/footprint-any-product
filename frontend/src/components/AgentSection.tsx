@@ -19,6 +19,8 @@ export function AgentSection({
   const [isOpen, setIsOpen] = useState(false);
 
   // Determine opacity based on isActive
+  // Note: Page Analysis results are handled separately in FootprintAnalysis.tsx
+  // This component is primarily for the lifecycle phase agents.
   const sectionOpacity = isActive ? 'opacity-100' : 'opacity-60';
 
   // Handle the icon based on agent type

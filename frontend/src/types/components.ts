@@ -10,7 +10,15 @@ export interface StreamingTextProps {
 }
 
 export interface ProductInputData {
-  url: string; // Changed from brand, category, description
+  url: string;
+}
+
+export interface PageAnalysisData {
+  brand?: string;
+  category?: string;
+  shortDescription?: string;
+  longDescription?: string;
+  productImageUrls?: string[];
 }
 
 export interface ProductInputProps {

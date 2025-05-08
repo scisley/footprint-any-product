@@ -11,10 +11,15 @@ export function FootprintAnalysis({
   onStreamingComplete
 }: FootprintAnalysisProps) {
   const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [finalSummary, setFinalSummary] = useState<string>('');
   const [totalCarbonFootprint, setTotalCarbonFootprint] = useState<number | null>(null);
+  
+  // State for page analysis results
+  const [pageAnalysis, setPageAnalysis] = useState<PageAnalysisData>({});
+
   const [agents, setAgents] = useState<Record<string, AgentData>>({
     planner: { messages: [], summary: '', carbon: null, isCompleted: false },
     materials: { messages: [], summary: '', carbon: null, isCompleted: false },
@@ -53,6 +58,7 @@ export function FootprintAnalysis({
           // Reset state when starting a new analysis
           setFinalSummary('');
           setTotalCarbonFootprint(null);
+          setPageAnalysis({}); // Reset page analysis state
           setAgents({
             planner: { messages: [], summary: '', carbon: null, isCompleted: false },
             materials: { messages: [], summary: '', carbon: null, isCompleted: false },
@@ -81,7 +87,27 @@ export function FootprintAnalysis({
             return;
           }
           
-          if (message.startsWith('Agent(')) {
+          // --- Handle Page Analysis Messages ---
+          if (message.startsWith('PageAnalysisBrand:')) {
+            setPageAnalysis(prev => ({ ...prev, brand: message.substring(18).trim() }));
+          } else if (message.startsWith('PageAnalysisCategory:')) {
+            setPageAnalysis(prev => ({ ...prev, category: message.substring(21).trim() }));
+          } else if (message.startsWith('PageAnalysisShortDescription:')) {
+            setPageAnalysis(prev => ({ ...prev, shortDescription: message.substring(29).trim() }));
+          } else if (message.startsWith('PageAnalysisLongDescription:')) {
+            setPageAnalysis(prev => ({ ...prev, longDescription: message.substring(28).trim() }));
+          } else if (message.startsWith('PageAnalysisImageUrls:')) {
+             try {
+                const urls = JSON.parse(message.substring(22).trim());
+                if (Array.isArray(urls)) {
+                    setPageAnalysis(prev => ({ ...prev, productImageUrls: urls }));
+                }
+             } catch (e) {
+                console.error("Failed to parse PageAnalysisImageUrls:", e);
+             }
+          }
+          // --- Handle Agent Messages ---
+          else if (message.startsWith('Agent(')) {
             // Process agent thinking
             try {
               const agentMatch = message.match(/^Agent\(([^)]+)\):/);
@@ -376,7 +402,7 @@ export function FootprintAnalysis({
   const agentOrder = ["planner", "materials", "manufacturing", "packaging", "transportation", "use", "eol"];
 
   // Show nothing if we're not streaming and have no data
-  if (!isStreaming && !isConnecting && !Object.values(agents).some(agent => agent.messages.length > 0)) {
+  if (!isStreaming && !isConnecting && !Object.values(agents).some(agent => agent.messages.length > 0) && Object.keys(pageAnalysis).length === 0) {
     return null;
   }
 
@@ -401,7 +427,7 @@ export function FootprintAnalysis({
         
         {error ? (
           <div className="text-red-500 p-4">{error}</div>
-        ) : isConnecting && !isConnected && !Object.values(agents).some(agent => agent.messages.length > 0) ? (
+        ) : isConnecting && !isConnected && Object.keys(pageAnalysis).length === 0 && !Object.values(agents).some(agent => agent.messages.length > 0) ? (
           <div className="text-center py-8">
             <div className="inline-block animate-spin h-8 w-8 border-4 border-gray-200 border-t-[var(--primary)] rounded-full mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400">Establishing connection and preparing analysis...</p>
@@ -409,6 +435,46 @@ export function FootprintAnalysis({
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Page Analysis Section */}
+            {(pageAnalysis.brand || pageAnalysis.category || pageAnalysis.shortDescription || pageAnalysis.longDescription || (pageAnalysis.productImageUrls && pageAnalysis.productImageUrls.length > 0)) && (
+                <div className="mb-4 border rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-hidden">
+                    <div className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                        <div className="flex items-center gap-3">
+                            <span className="text-xl">📄</span>
+                            <h3 className="font-medium text-lg">Page Analysis Results</h3>
+                        </div>
+                    </div>
+                    <div className="p-4 text-sm text-gray-700 dark:text-gray-300">
+                        {pageAnalysis.brand && <p><strong>Brand:</strong> {pageAnalysis.brand}</p>}
+                        {pageAnalysis.category && <p><strong>Category:</strong> {pageAnalysis.category}</p>}
+                        {pageAnalysis.shortDescription && <p><strong>Short Description:</strong> {pageAnalysis.shortDescription}</p>}
+                        {pageAnalysis.longDescription && (
+                            <div className="mt-3">
+                                <strong>Long Description:</strong>
+                                <div className="mt-1 p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md max-h-40 overflow-y-auto">
+                                    {pageAnalysis.longDescription}
+                                </div>
+                            </div>
+                        )}
+                        {pageAnalysis.productImageUrls && pageAnalysis.productImageUrls.length > 0 && (
+                            <div className="mt-3">
+                                <strong>Images Found:</strong>
+                                <div className="flex flex-wrap gap-2 mt-1 max-h-24 overflow-y-auto">
+                                    {pageAnalysis.productImageUrls.map((imgUrl, idx) => (
+                                        <img 
+                                            key={idx} 
+                                            src={imgUrl} 
+                                            alt={`Product image ${idx + 1}`} 
+                                            className="h-16 w-16 object-cover rounded-md border border-gray-200 dark:border-gray-700"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Agent sections */}
             {agentOrder.map(agentKey => {
               const agent = agents[agentKey];
