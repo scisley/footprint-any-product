@@ -105,6 +105,11 @@ export function StreamingText({
             if (message === "AnalysisComplete") {
               console.log('[StreamingText WebSocket] AnalysisComplete message received.');
               onStreamingComplete?.();
+            } else if (message.startsWith("ErrorMessage:")) {
+              const errorMsg = message.substring(13).trim();
+              console.error('[StreamingText WebSocket] Error message received:', errorMsg);
+              setError(errorMsg);
+              onStreamingComplete?.();
             }
           };
 
@@ -113,9 +118,11 @@ export function StreamingText({
             setIsConnected(false);
             // Only call onStreamingComplete if the connection was intentionally closed after starting.
             // Avoid calling it if the connection failed to open.
-            if (hasInitializedRef.current && !error) { 
+            if (hasInitializedRef.current && !error) {
               onStreamingComplete?.();
             }
+            // Clear the WebSocket reference when it's closed
+            wsRef.current = null;
           };
 
           socket.onerror = (errEvent) => {
@@ -124,8 +131,10 @@ export function StreamingText({
             console.error('[StreamingText WebSocket] Error:', errEvent);
             setError(errorMessage);
             setIsConnected(false);
+            // Clear the WebSocket reference on error
+            wsRef.current = null;
             // Potentially call onStreamingComplete here if an error means the stream is over.
-            // onStreamingComplete?.(); 
+            onStreamingComplete?.();
           };
         } catch (err) {
           console.error('[StreamingText useEffect] Error establishing WebSocket connection:', err);
@@ -153,7 +162,7 @@ export function StreamingText({
         setIsConnected(false);
       }
     };
-  }, [isStreaming, url, productUrl, onStreamingComplete]);
+  }, [isStreaming, url, productUrl, onStreamingComplete, error]);
 
   // Format the text with markdown-like syntax
   const formatText = (text: string) => {

@@ -4,7 +4,7 @@ import json
 import os # Added to manipulate paths
 import sys # Added to manipulate Python's search path for modules
 import re # re might be needed by helpers, ensure it's here if so, or remove
-from typing import Dict, Any, Union # Union might not be needed directly here
+from typing import Dict, Any, Union, Set # Union might not be needed directly here
 
 # Add the project root to sys.path to allow for absolute imports from the root
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -51,7 +51,7 @@ def read_item(item_id: int, q: Union[str, None] = None):
 
 @app.websocket("/ws")
 @app.websocket("/") # Add this line to also handle WebSocket connections at the root path
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, recursion_limit: int = 50):
     """
     WebSocket endpoint for streaming real-time carbon footprint analysis.
     
@@ -113,14 +113,25 @@ async def websocket_endpoint(websocket: WebSocket):
             config,
             stream_mode=["updates", "values"]
         )
-        
+
+        # Track processed nodes to prevent infinite recursion
+        processed_nodes: Set[str] = set()
+        recursion_count = 0
+
         # Process streaming results
         async for chunk in stream:
             try:
+                # Check for recursion limit
+                recursion_count += 1
+                if recursion_count > recursion_limit:
+                    await websocket.send_text("ErrorMessage: Recursion limit reached in analysis. Please try again with simpler input.")
+                    print(f"WebSocket error: Recursion limit of {recursion_limit} reached without hitting a stop condition")
+                    break
+
                 # More detailed debugging of chunked results
                 chunk_type = type(chunk).__name__
                 print(f"LangGraph chunk type: {chunk_type}")
-                
+
                 # Validate chunk format and extract data
                 if not (isinstance(chunk, tuple) and len(chunk) == 2):
                     print(f"WARNING: Unexpected chunk format: {type(chunk)}")
