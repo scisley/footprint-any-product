@@ -5,7 +5,7 @@ import { FootprintAnalysisProps, AgentData } from '@/types/components';
 import { AgentSection } from './AgentSection';
 
 export function FootprintAnalysis({
-  url = 'ws://localhost:3005/ws', // WebSocket URL
+  url = 'ws://localhost:3005/', // WebSocket URL, changed default to root path
   isStreaming,
   productUrl, // Product URL
   onStreamingComplete
