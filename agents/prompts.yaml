@@ -170,19 +170,19 @@ eol_agent_prompt: |
   Use your tools, but if unknown values remain, use reasonable assumptions.
 
 page_analysis_image_question: |
-  Extract all image urls from the following markdown, making sure to avoid small icons and logos, and only include the images that pertain to the main product on the page, rather than images of recommended or similar products in other components of the page. Prefer larger images (over 1kb), prefer to be stricter and only keep 1-2 images with white-only backgrounds if possible, rather than keeping too many or images with complex backgrounds. Return the result as a space-delimited list of image_urls and nothing else.
+  Extract image URLs from the markdown that clearly show the main product. These images will be used to help identify materials and manufacturing processes for carbon footprint analysis. Avoid icons, logos, and images of unrelated or recommended products. Prioritize clear, well-lit images of the product itself, preferably on a simple background. Return a space-delimited list of image URLs.
 
 page_analysis_brand_question: |
-  What is the brand of the product in the markdown below? Return only the simple brand name, not a description of the product. Return just the brand, no other text.
+  Identify the brand of the product described in the markdown. This information can help infer manufacturing locations or typical material quality for carbon footprint analysis. Return only the brand name.
 
 page_analysis_category_question: |
-  What is the category of the product in the markdown below, in very simple terms, that don't include the brand or very descriptive details? For example, a bike, t-shirt, office chair, or notebook, rather than something more specific like a blue notebook or an ergonomic office chair. Return just the category, no other text.
+  Determine the general category of the product (e.g., 'smartphone', 'cotton t-shirt', 'wooden chair'). This helps in selecting appropriate emissions factors for its lifecycle. Avoid brand names and overly specific details. Return just the category.
 
 page_analysis_short_description_question: |
-  What is a very brief description of the product in the markdown below? Return a single sentence, no more than 20 words, and make sure it actually describes the product and what it might be used for.
+  Provide a concise (1-2 sentence, max 30 words) description of the product, highlighting key features relevant to its material composition, manufacturing, or use phase for carbon footprint analysis (e.g., 'A rechargeable lithium-ion battery powered electric scooter with an aluminum frame.').
 
 page_analysis_long_description_question: |
-  Extract all product details in the markdown below that are relevant to the main product on this page. Ignore descriptions or details for secondary products like recommendations or related products.
+  Extract detailed product information from the markdown, focusing on aspects critical for Life Cycle Assessment (LCA). This includes, but is not limited to: materials used (e.g., 'recycled aluminum', 'organic cotton'), product dimensions, weight, manufacturing processes mentioned, country of origin or manufacture, energy consumption details (if applicable), and any specific components. Ignore information about unrelated or recommended products.
 
 planner_agent_prompt: |
   Your Role:
