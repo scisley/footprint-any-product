@@ -13,12 +13,12 @@ if project_root not in sys.path:
 
 # Third-party imports
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import uvicorn # Added to run the FastAPI app
 
 # Local application imports
 # Adjust imports to be absolute from the project root
 from state import FootprintState # For type hinting initial_graph_state
-# utils module might be needed for other things, or can be removed if not.
-# import utils # Environment is loaded in the root main.py
+import utils # Ensure utils is imported for load_environment
 
 # Import graph setup and streaming helpers from .graph module
 # Changed to absolute import to work when api/main.py is run directly
@@ -309,3 +309,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_text(f"ErrorMessage: {str(e)}")
         except Exception as send_err:
             print(f"WebSocket error sending error message: {send_err}")
+
+if __name__ == "__main__":
+    # Load environment variables once at the start
+    utils.load_environment()
+    
+    # Run the Uvicorn server
+    # Use the same port as in the frontend configuration
+    uvicorn.run(app, host="127.0.0.1", port=3005)
