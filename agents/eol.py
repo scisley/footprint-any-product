@@ -31,8 +31,7 @@ if not openai_api_key:
     logger.error("OPENAI_API_KEY not found in environment variables!")
 
 eol_agent = create_react_agent(
-    #model=ChatOpenAI(model_name="o3"),
-    model=ChatOpenAI(model_name="o3-2025-04-16", temperature=0, openai_api_key=openai_api_key),
+    model=ChatOpenAI(model_name="gpt-4.1-2025-04-14", openai_api_key=openai_api_key),
     tools=[emissions_factor_finder_tool, calculator],
     prompt=eol_agent_prompt_text,
     response_format=EOLResponse,

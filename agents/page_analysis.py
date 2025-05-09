@@ -26,7 +26,7 @@ category_question = _prompts_data['page_analysis_category_question']
 short_description_question = _prompts_data['page_analysis_short_description_question']
 long_description_question = _prompts_data['page_analysis_long_description_question']
 
-llm = ChatOpenAI(model_name="o3-2025-04-16")
+llm = ChatOpenAI(model_name="gpt-4.1-2025-04-14")
 
 def trim_url(url):
     parsed = urlparse(url)
