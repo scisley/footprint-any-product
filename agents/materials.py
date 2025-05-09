@@ -25,7 +25,7 @@ with open(_PROMPTS_FILE, 'r') as f:
 materials_agent_prompt_text = _prompts_data['materials_agent_prompt']
 
 materials_agent = create_react_agent(
-    model=ChatOpenAI(model_name="gpt-4.1", temperature=0),
+    model=ChatOpenAI(model_name="o3-2025-04-16", temperature=0),
     tools=[emissions_factor_finder_tool, calculator],
     prompt=materials_agent_prompt_text,
     response_format=MaterialsResponse,

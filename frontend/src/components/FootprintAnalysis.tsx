@@ -579,16 +579,15 @@ export function FootprintAnalysis({
                         )}
                         {pageAnalysis.productImageUrls && pageAnalysis.productImageUrls.length > 0 && (
                             <div className="mt-3">
-                                <strong>Images Found:</strong>
-                                <div className="flex flex-wrap gap-2 mt-1 max-h-24 overflow-y-auto">
-                                    {pageAnalysis.productImageUrls.map((imgUrl, idx) => (
-                                        <img 
-                                            key={idx} 
-                                            src={imgUrl} 
-                                            alt={`Product image ${idx + 1}`} 
-                                            className="h-16 w-16 object-cover rounded-md border border-gray-200 dark:border-gray-700"
+                                <strong>Product Image:</strong>
+                                <div className="mt-2">
+                                    <div className="mb-2">
+                                        <img
+                                            src={pageAnalysis.productImageUrls[0]}
+                                            alt="Product image"
+                                            className="h-48 max-w-full object-contain rounded-md border border-gray-200 dark:border-gray-700 mx-auto"
                                         />
-                                    ))}
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -626,13 +625,121 @@ export function FootprintAnalysis({
                   <span>🌍</span>
                   <span>Overall Analysis</span>
                 </h3>
-                
+
                 {totalCarbonFootprint !== null && (
                   <div className="text-2xl font-bold text-green-700 dark:text-green-300 mb-3">
                     Total Carbon Footprint: {totalCarbonFootprint.toFixed(2)} kg CO₂e
                   </div>
                 )}
-                
+
+                {/* Carbon Footprint Percentage Breakdown */}
+                {totalCarbonFootprint !== null && (
+                  <div className="mb-4 pb-4 border-b border-green-200">
+                    <h4 className="font-medium text-green-700 dark:text-green-300 mb-2">Carbon Footprint Breakdown</h4>
+                  </div>
+                )}
+
+                {totalCarbonFootprint !== null && (
+                  <div className="mt-4">
+                    <div className="grid gap-1">
+                      {agentOrder.filter(key => key !== "planner").map(agentKey => {
+                        const agent = agents[agentKey];
+                        const config = agentConfigs[agentKey as keyof typeof agentConfigs];
+                        const percentage = agent.carbon ? (agent.carbon / totalCarbonFootprint * 100) : 0;
+
+                        if (percentage <= 0) return null;
+
+                        const barColor = agentKey === "materials" ? "bg-rose-500" :
+                                         agentKey === "manufacturing" ? "bg-blue-500" :
+                                         agentKey === "packaging" ? "bg-amber-500" :
+                                         agentKey === "transportation" ? "bg-indigo-500" :
+                                         agentKey === "use" ? "bg-green-500" :
+                                         agentKey === "eol" ? "bg-purple-500" : "bg-gray-500";
+
+                        return (
+                          <div key={agentKey} className="mb-1">
+                            <div className="flex justify-between items-center text-sm mb-1">
+                              <div className="flex items-center gap-1">
+                                <span className={`w-3 h-3 rounded-full ${barColor}`}></span>
+                                <span className={config.textColor}>{config.title}</span>
+                              </div>
+                              <span className="font-medium">
+                                {percentage.toFixed(1)}% ({agent.carbon?.toFixed(2)} kg CO₂e)
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div
+                                className={`${barColor} h-2 rounded-full`}
+                                style={{ width: `${Math.max(percentage, 0.5)}%` }}
+                                title={`${config.title}: ${percentage.toFixed(1)}% (${agent.carbon?.toFixed(2)} kg CO₂e)`}
+                              ></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Summary of highest contributors */}
+                    {totalCarbonFootprint > 0 && (
+                      <div className="mt-3 text-sm text-green-700 dark:text-green-300">
+                        {(() => {
+                          // Find top contributors
+                          const contributors = agentOrder
+                            .filter(key => key !== "planner")
+                            .map(key => ({
+                              key,
+                              name: agentConfigs[key as keyof typeof agentConfigs].title,
+                              carbon: agents[key].carbon || 0,
+                              percentage: agents[key].carbon ? (agents[key].carbon / totalCarbonFootprint * 100) : 0
+                            }))
+                            .filter(item => item.percentage > 0)
+                            .sort((a, b) => b.percentage - a.percentage);
+
+                          if (contributors.length === 0) return null;
+
+                          const topContributor = contributors[0];
+
+                          if (contributors.length === 1) {
+                            return (
+                              <p>
+                                <span className="font-semibold">{topContributor.name}</span> is
+                                the only contributor to this product's carbon footprint at
+                                <span className="font-semibold"> {topContributor.percentage.toFixed(1)}%</span>.
+                              </p>
+                            );
+                          }
+
+                          const secondContributor = contributors[1];
+
+                          if (topContributor.percentage > 75) {
+                            return (
+                              <p>
+                                <span className="font-semibold">{topContributor.name}</span> is
+                                the primary source of carbon emissions at
+                                <span className="font-semibold"> {topContributor.percentage.toFixed(1)}%</span> of
+                                the total footprint.
+                              </p>
+                            );
+                          }
+
+                          return (
+                            <p>
+                              The largest contributors are
+                              <span className="font-semibold"> {topContributor.name}</span>
+                              ({topContributor.percentage.toFixed(1)}%) and
+                              <span className="font-semibold"> {secondContributor.name}</span>
+                              ({secondContributor.percentage.toFixed(1)}%),
+                              accounting for
+                              <span className="font-semibold"> {(topContributor.percentage + secondContributor.percentage).toFixed(1)}%</span>
+                              of the total carbon footprint.
+                            </p>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {finalSummary && (
                   <div className="text-green-800 dark:text-green-200">
                     {finalSummary}
