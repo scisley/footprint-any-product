@@ -652,7 +652,7 @@ export function FootprintAnalysis({
                   <div className="mb-4 pb-4 border-b border-green-200">
                     <h4 className="font-medium text-green-700 dark:text-green-300 mb-2">Carbon Footprint Breakdown</h4>
 
-                    {/* Horizontal bars only >
+                    {/* Horizontal bars only */}
                       {/* Pie chart (CSS-based) */}
                       <div className="relative w-24 h-24 rounded-full">
                         {(() => {
