@@ -21,7 +21,8 @@ from state import FootprintState # For type hinting initial_graph_state
 # import utils # Environment is loaded in the root main.py
 
 # Import graph setup and streaming helpers from .graph module
-from .graph import setup_graph, process_phase_update, process_summarizer_update, send_agent_messages, page_analysis_phase
+# Changed to absolute import to work when api/main.py is run directly
+from api.graph import setup_graph, process_phase_update, process_summarizer_update, send_agent_messages, page_analysis_phase
 
 
 # --- FastAPI App Setup ---
