@@ -1,26 +1,10 @@
-import os
-import operator
-from typing import TypedDict, Annotated
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, START, END
 from tools.emissions_factors_sources.epa_emissions_factors_hub import epa_ef_finder
 from tools.emissions_factors_sources.parametric_knowledge import parametric_knowledge_ef_finder
-
-class EmissionsFactor(BaseModel):
-    """An emissions factor for a given process and phase."""
-    CO2e_factor: float = Field(description="The carbon emissions factor value.")
-    units: str = Field(description="The carbon emissions factor units (e.g. kgCO2e/kg, kgCO2/square meter, kgCO2e/per mile, etc).")
-    description: str = Field(description="A description of the emissions factor. Don't repeat the value, describe it's details.")
-    citation_desc: str = Field(description="A description of the citation")
-    citation_url: str = Field(description="A URL for the citation", default=None)
-
-class EFState(TypedDict):
-    ef_candidates: Annotated[list[EmissionsFactor], operator.add]
-    emissions_factor: EmissionsFactor
-    process_desc: str
-    phase: str
+from tools.emissions_factors_state import EFState
 
 
 def source_picker(state:EFState):

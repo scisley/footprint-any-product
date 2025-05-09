@@ -1,7 +1,7 @@
 from typing import Literal
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
-from tools.emissions_factors import EFState, EmissionsFactor
+from tools.emissions_factors_state import EFState
 import os
 
 class EPAEmissionsFactor(BaseModel):
