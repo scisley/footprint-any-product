@@ -17,7 +17,7 @@ import uvicorn # Added to run the FastAPI app
 
 # Local application imports
 # Adjust imports to be absolute from the project root
-from state import FootprintState # For type hinting initial_graph_state
+from agents.state import FootprintState # For type hinting initial_graph_state
 import utils # Ensure utils is imported for load_environment
 
 # Import graph setup and streaming helpers from .graph module
