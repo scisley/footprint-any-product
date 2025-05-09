@@ -13,10 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Footprint Any Product",
+  title: "Carbon Thread",
   description: "Generate a lifecycle carbon analysis for any product based on its URL",
   icons: {
-    icon: '/globe.svg',
+    icon: '/carbon-thread-logo.png',
   },
 };
 

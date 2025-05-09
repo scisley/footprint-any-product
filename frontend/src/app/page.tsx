@@ -27,14 +27,13 @@ export default function Home() {
       <header className="border-b border-[var(--border)] py-4">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image 
-              src="/globe.svg" 
-              alt="Footprint Any Product logo" 
-              width={32} 
-              height={32} 
-              className="dark:invert"
+            <Image
+              src="/carbon-thread-logo.png"
+              alt="Carbon Thread logo"
+              width={32}
+              height={32}
             />
-            <h1 className="text-xl font-bold">Footprint Any Product</h1>
+            <h1 className="text-xl font-bold">Carbon Thread</h1>
           </div>
         </div>
       </header>
@@ -62,7 +61,7 @@ export default function Home() {
       
       <footer className="border-t border-[var(--border)] py-6">
         <div className="container mx-auto px-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>© {new Date().getFullYear()} Footprint Any Product. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Carbon Thread. All rights reserved.</p>
         </div>
       </footer>
     </div>

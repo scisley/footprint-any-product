@@ -314,7 +314,10 @@ async def websocket_endpoint(websocket: WebSocket):
 if __name__ == "__main__":
     # Load environment variables once at the start
     utils.load_environment()
-    
+
+    # Set LangChain project for logging
+    os.environ['LANGCHAIN_PROJECT'] = 'footprint-any-product'
+
     # Run the Uvicorn server
     # Use the same port as in the frontend configuration
     uvicorn.run(app, host="127.0.0.1", port=3005)
