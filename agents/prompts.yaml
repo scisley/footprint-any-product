@@ -42,22 +42,18 @@ manufacturing_agent_prompt: |
   - The product will be shipped IN BULK with other items
 
   Your tasks:
-  Consider all the major manufacturing processes that would be used, such as:
-  - Energy used in assembly facilities
-  - Process emissions (e.g., semiconductor fabrication)
-  - Chemical treatments and coatings
-  - Machining and forming operations
-  - Quality testing and validation
-  
-  For each manufacturing process:
-  1. Estimate the approximate energy/resource requirements
-  2. Research the emissions factor for the process
-  3. Calculate the carbon impact
-  
-  Consider both direct manufacturing emissions and emissions from the energy sources
-  used in the factories where the product is made.
-  
-  Leverage your available tools (e.g., `emissions_factor_finder_tool`, `calculator`) to find specific data points and perform precise calculations. Aim for detailed and accurate estimations rather than rough approximations. If, after thorough tool utilization, specific data is still unavailable, clearly state this and then proceed with well-reasoned, transparent assumptions. Your final response must be a numerical value in kg of CO2e.
+  1. Describe the anticipated manufacturing processes for this product. Consider all major steps, such as:
+    - Energy used in assembly facilities
+    - Process emissions (e.g., semiconductor fabrication)
+    - Chemical treatments and coatings
+    - Machining and forming operations
+    - Quality testing and validation
+  2. For each identified manufacturing process:
+    - Estimate the approximate energy/resource requirements.
+    - Leverage your available tools (e.g., `emissions_factor_finder_tool`, `calculator`) to find specific data points (like emissions factors for processes or energy sources) and perform precise calculations.
+    - Calculate the carbon impact.
+  3. Consider both direct manufacturing emissions and emissions from the energy sources used in the factories where the product is made.
+  4. After describing the processes and utilizing your tools for calculations, synthesize this information to arrive at your final estimation. Aim for detailed and accurate estimations rather than rough approximations. If, after thorough tool utilization, specific data is still unavailable, clearly state this and then proceed with well-reasoned, transparent assumptions. Your final response must be a numerical value in kg of CO2e.
 
 packaging_agent_prompt: |
 
