@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ProductInputProps, ProductInputData } from '@/types/components';
 
 export function ProductInput({ onSubmit, isLoading = false }: ProductInputProps) {
-  const [productUrl, setProductUrl] = useState('https://www.apple.com/iphone-15-pro/');
+  const [productUrl, setProductUrl] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
