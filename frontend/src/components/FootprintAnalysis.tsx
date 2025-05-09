@@ -355,6 +355,11 @@ export function FootprintAnalysis({
           } else if (message === "AnalysisComplete") {
             console.log('[Analysis Complete]');
             onStreamingComplete?.();
+          } else if (message.startsWith("ErrorMessage:")) {
+            const errorMsg = message.substring(13).trim();
+            console.error('[FootprintAnalysis WebSocket] Error message received:', errorMsg);
+            setError(errorMsg);
+            onStreamingComplete?.();
           }
         };
 
