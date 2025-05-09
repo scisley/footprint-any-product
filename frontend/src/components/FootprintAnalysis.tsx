@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FootprintAnalysisProps, AgentData } from '@/types/components';
+import { FootprintAnalysisProps, AgentData, PageAnalysisData } from '@/types/components';
 import { AgentSection } from './AgentSection';
 
 export function FootprintAnalysis({
