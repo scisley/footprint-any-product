@@ -579,16 +579,30 @@ export function FootprintAnalysis({
                         )}
                         {pageAnalysis.productImageUrls && pageAnalysis.productImageUrls.length > 0 && (
                             <div className="mt-3">
-                                <strong>Images Found:</strong>
-                                <div className="flex flex-wrap gap-2 mt-1 max-h-24 overflow-y-auto">
-                                    {pageAnalysis.productImageUrls.map((imgUrl, idx) => (
-                                        <img 
-                                            key={idx} 
-                                            src={imgUrl} 
-                                            alt={`Product image ${idx + 1}`} 
-                                            className="h-16 w-16 object-cover rounded-md border border-gray-200 dark:border-gray-700"
+                                <strong>Product Images:</strong>
+                                <div className="mt-2">
+                                    {/* Main (first) image - larger size */}
+                                    <div className="mb-2">
+                                        <img
+                                            src={pageAnalysis.productImageUrls[0]}
+                                            alt="Main product image"
+                                            className="h-48 max-w-full object-contain rounded-md border border-gray-200 dark:border-gray-700 mx-auto"
                                         />
-                                    ))}
+                                    </div>
+
+                                    {/* Additional images as thumbnails if there are more than one */}
+                                    {pageAnalysis.productImageUrls.length > 1 && (
+                                        <div className="flex flex-wrap gap-2 mt-1 max-h-24 overflow-y-auto">
+                                            {pageAnalysis.productImageUrls.slice(1).map((imgUrl, idx) => (
+                                                <img
+                                                    key={idx}
+                                                    src={imgUrl}
+                                                    alt={`Product image ${idx + 2}`}
+                                                    className="h-16 w-16 object-cover rounded-md border border-gray-200 dark:border-gray-700"
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -626,13 +640,208 @@ export function FootprintAnalysis({
                   <span>🌍</span>
                   <span>Overall Analysis</span>
                 </h3>
-                
+
                 {totalCarbonFootprint !== null && (
                   <div className="text-2xl font-bold text-green-700 dark:text-green-300 mb-3">
                     Total Carbon Footprint: {totalCarbonFootprint.toFixed(2)} kg CO₂e
                   </div>
                 )}
-                
+
+                {/* Carbon Footprint Percentage Breakdown */}
+                {totalCarbonFootprint !== null && (
+                  <div className="mb-4 pb-4 border-b border-green-200">
+                    <h4 className="font-medium text-green-700 dark:text-green-300 mb-2">Carbon Footprint Breakdown</h4>
+
+                    {/* Horizontal bars only >
+                      {/* Pie chart (CSS-based) */}
+                      <div className="relative w-24 h-24 rounded-full">
+                        {(() => {
+                          // Get sections with carbon values
+                          const sectionsWithCarbon = agentOrder
+                            .filter(key => key !== "planner")
+                            .map(key => ({
+                              key,
+                              carbon: agents[key].carbon || 0,
+                              percentage: agents[key].carbon ? (agents[key].carbon / totalCarbonFootprint * 100) : 0
+                            }))
+                            .filter(section => section.carbon > 0)
+                            .sort((a, b) => b.percentage - a.percentage);
+
+                          // Early return for no data
+                          if (sectionsWithCarbon.length === 0) {
+                            return <div className="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-full"></div>;
+                          }
+
+                          // Function to get color based on agent key
+                          const getColorForAgent = (key: string) => {
+                            switch(key) {
+                              case "materials": return "#f43f5e"; // rose-500
+                              case "manufacturing": return "#3b82f6"; // blue-500
+                              case "packaging": return "#f59e0b"; // amber-500
+                              case "transportation": return "#6366f1"; // indigo-500
+                              case "use": return "#22c55e"; // green-500
+                              case "eol": return "#a855f7"; // purple-500
+                              default: return "#6b7280"; // gray-500
+                            }
+                          };
+
+                          // Calculate rotation offsets
+                          let currentAngle = 0;
+                          return (
+                            <div className="w-full h-full rounded-full overflow-hidden">
+                              {sectionsWithCarbon.map((section, index) => {
+                                const startAngle = currentAngle;
+                                const sliceAngle = (section.percentage / 100) * 360;
+                                currentAngle += sliceAngle;
+
+                                // For each segment, create a radial gradient
+                                return (
+                                  <div
+                                    key={section.key}
+                                    className="absolute inset-0 w-full h-full"
+                                    style={{
+                                      background: `conic-gradient(${getColorForAgent(section.key)} ${startAngle}deg, ${getColorForAgent(section.key)} ${startAngle + sliceAngle}deg, transparent ${startAngle + sliceAngle}deg)`,
+                                      transform: "rotate(0deg)",
+                                    }}
+                                    title={`${agentConfigs[section.key as keyof typeof agentConfigs].title}: ${section.percentage.toFixed(1)}%`}
+                                  />
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Legend */}
+                      <div className="flex flex-col gap-1 text-xs">
+                        {agentOrder
+                          .filter(key => key !== "planner")
+                          .filter(key => (agents[key].carbon || 0) > 0)
+                          .sort((a, b) => (agents[b].carbon || 0) - (agents[a].carbon || 0))
+                          .map(agentKey => {
+                            const agent = agents[agentKey];
+                            const config = agentConfigs[agentKey as keyof typeof agentConfigs];
+                            const percentage = agent.carbon ? (agent.carbon / totalCarbonFootprint * 100) : 0;
+
+                            if (percentage <= 0) return null;
+
+                            const dotColor = agentKey === "materials" ? "bg-rose-500" :
+                                           agentKey === "manufacturing" ? "bg-blue-500" :
+                                           agentKey === "packaging" ? "bg-amber-500" :
+                                           agentKey === "transportation" ? "bg-indigo-500" :
+                                           agentKey === "use" ? "bg-green-500" :
+                                           agentKey === "eol" ? "bg-purple-500" : "bg-gray-500";
+
+                            return (
+                              <div key={agentKey} className="flex items-center gap-1">
+                                <span className={`w-2.5 h-2.5 rounded-full ${dotColor}`}></span>
+                                <span>{config.title}: {percentage.toFixed(1)}%</span>
+                              </div>
+                            );
+                          })
+                        }
+                      </div>
+                    </div>
+
+                    <div className="grid gap-1">
+                      {agentOrder.filter(key => key !== "planner").map(agentKey => {
+                        const agent = agents[agentKey];
+                        const config = agentConfigs[agentKey as keyof typeof agentConfigs];
+                        const percentage = agent.carbon ? (agent.carbon / totalCarbonFootprint * 100) : 0;
+
+                        if (percentage <= 0) return null;
+
+                        const barColor = agentKey === "materials" ? "bg-rose-500" :
+                                         agentKey === "manufacturing" ? "bg-blue-500" :
+                                         agentKey === "packaging" ? "bg-amber-500" :
+                                         agentKey === "transportation" ? "bg-indigo-500" :
+                                         agentKey === "use" ? "bg-green-500" :
+                                         agentKey === "eol" ? "bg-purple-500" : "bg-gray-500";
+
+                        return (
+                          <div key={agentKey} className="mb-1">
+                            <div className="flex justify-between items-center text-sm mb-1">
+                              <div className="flex items-center gap-1">
+                                <span className={`w-3 h-3 rounded-full ${barColor}`}></span>
+                                <span className={config.textColor}>{config.title}</span>
+                              </div>
+                              <span className="font-medium">
+                                {percentage.toFixed(1)}% ({agent.carbon?.toFixed(2)} kg CO₂e)
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div
+                                className={`${barColor} h-2 rounded-full`}
+                                style={{ width: `${Math.max(percentage, 0.5)}%` }}
+                                title={`${config.title}: ${percentage.toFixed(1)}% (${agent.carbon?.toFixed(2)} kg CO₂e)`}
+                              ></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Summary of highest contributors */}
+                    {totalCarbonFootprint > 0 && (
+                      <div className="mt-3 text-sm text-green-700 dark:text-green-300">
+                        {(() => {
+                          // Find top contributors
+                          const contributors = agentOrder
+                            .filter(key => key !== "planner")
+                            .map(key => ({
+                              key,
+                              name: agentConfigs[key as keyof typeof agentConfigs].title,
+                              carbon: agents[key].carbon || 0,
+                              percentage: agents[key].carbon ? (agents[key].carbon / totalCarbonFootprint * 100) : 0
+                            }))
+                            .filter(item => item.percentage > 0)
+                            .sort((a, b) => b.percentage - a.percentage);
+
+                          if (contributors.length === 0) return null;
+
+                          const topContributor = contributors[0];
+
+                          if (contributors.length === 1) {
+                            return (
+                              <p>
+                                <span className="font-semibold">{topContributor.name}</span> is
+                                the only contributor to this product's carbon footprint at
+                                <span className="font-semibold"> {topContributor.percentage.toFixed(1)}%</span>.
+                              </p>
+                            );
+                          }
+
+                          const secondContributor = contributors[1];
+
+                          if (topContributor.percentage > 75) {
+                            return (
+                              <p>
+                                <span className="font-semibold">{topContributor.name}</span> is
+                                the primary source of carbon emissions at
+                                <span className="font-semibold"> {topContributor.percentage.toFixed(1)}%</span> of
+                                the total footprint.
+                              </p>
+                            );
+                          }
+
+                          return (
+                            <p>
+                              The largest contributors are
+                              <span className="font-semibold"> {topContributor.name}</span>
+                              ({topContributor.percentage.toFixed(1)}%) and
+                              <span className="font-semibold"> {secondContributor.name}</span>
+                              ({secondContributor.percentage.toFixed(1)}%),
+                              accounting for
+                              <span className="font-semibold"> {(topContributor.percentage + secondContributor.percentage).toFixed(1)}%</span>
+                              of the total carbon footprint.
+                            </p>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {finalSummary && (
                   <div className="text-green-800 dark:text-green-200">
                     {finalSummary}
