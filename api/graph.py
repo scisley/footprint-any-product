@@ -161,14 +161,40 @@ async def send_agent_messages(websocket: Any, phase_key: str, messages: List[Dic
                         # Ensure args is a dict for json.dumps, Langchain tool_calls usually have args as dict
                         if tool_name and isinstance(tool_args, dict):
                             tool_calls_found += 1
-                            await websocket.send_text(f"AgentTool({phase_key}): {tool_name}({json.dumps(tool_args)})")
+                            # Format tool args in a more readable way
+                            formatted_args = {}
+                            for arg_key, arg_value in tool_args.items():
+                                # Truncate long string values for readability
+                                if isinstance(arg_value, str) and len(arg_value) > 100:
+                                    formatted_args[arg_key] = arg_value[:97] + "..."
+                                else:
+                                    formatted_args[arg_key] = arg_value
+
+                            # Add tool_id if available for tracking related tool calls
+                            tool_id = tool_call.get("id", "")
+                            tool_message = {
+                                "name": tool_name,
+                                "args": formatted_args,
+                                "id": tool_id
+                            }
+                            await websocket.send_text(f"AgentTool({phase_key}): {json.dumps(tool_message)}")
                             await asyncio.sleep(0.1) 
         
         elif role == "tool": # This is an observation/result from a tool
             tool_content = msg.get("content")
+            # Get the tool call ID if available for linking observation to tool call
+            tool_call_id = msg.get("tool_call_id", "")
+            tool_name = msg.get("name", "")
+
             # Ensure content is a string before stripping
             if isinstance(tool_content, str) and tool_content.strip():
-                await websocket.send_text(f"AgentObs({phase_key}): {tool_content.strip()}")
+                # Format as JSON for more structured data
+                obs_data = {
+                    "content": tool_content.strip(),
+                    "tool_call_id": tool_call_id,
+                    "tool_name": tool_name
+                }
+                await websocket.send_text(f"AgentObs({phase_key}): {json.dumps(obs_data)}")
                 await asyncio.sleep(0.1)
                 
     # Send status information
