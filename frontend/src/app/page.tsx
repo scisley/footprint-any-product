@@ -9,7 +9,7 @@ import { ProductInputData } from '@/types/components';
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [productUrlValue, setProductUrlValue] = useState(''); // Renamed to avoid conflict with FootprintAnalysis prop
-  const webSocketUrl = 'ws://localhost:3005/ws';
+  const webSocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:3005/ws';
 
   const handleSubmit = (input: ProductInputData) => {
     console.log('[Home Page] handleSubmit called with input:', input);
