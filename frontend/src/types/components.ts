@@ -26,8 +26,19 @@ export interface ProductInputProps {
   isLoading?: boolean;
 }
 
+export interface AgentMessage {
+  type: string;
+  content: string;
+  // Tool call specific fields
+  toolName?: string;
+  toolArgs?: Record<string, any>;
+  toolId?: string;
+  // Observation specific fields
+  toolCallId?: string;
+}
+
 export interface AgentData {
-  messages: Array<{type: string, content: string}>;
+  messages: Array<AgentMessage>;
   summary: string;
   carbon: number | null;
   isCompleted: boolean;

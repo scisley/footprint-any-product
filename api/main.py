@@ -50,6 +50,7 @@ def read_item(item_id: int, q: Union[str, None] = None):
 # --- WebSocket API Endpoint ---
 
 @app.websocket("/ws")
+@app.websocket("/") # Add this line to also handle WebSocket connections at the root path
 async def websocket_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint for streaming real-time carbon footprint analysis.

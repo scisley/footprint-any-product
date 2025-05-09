@@ -19,6 +19,9 @@ module.exports = {
           light: "#3b82f6",
         },
       },
+      fontSize: {
+        'xxs': '0.625rem', // Adds extra small text size for tool details
+      },
     },
   },
   plugins: [],

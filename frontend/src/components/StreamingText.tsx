@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { StreamingTextProps } from '@/types/components';
 
 export function StreamingText({
-  url = 'ws://localhost:3005/ws', // WebSocket URL
+  url = 'ws://localhost:3005/', // WebSocket URL, changed default to root path
   isStreaming,
   productUrl, // Product URL
   onStreamingComplete

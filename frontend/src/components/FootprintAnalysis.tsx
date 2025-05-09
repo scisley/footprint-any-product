@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FootprintAnalysisProps, AgentData } from '@/types/components';
+import { FootprintAnalysisProps, AgentData, PageAnalysisData } from '@/types/components';
 import { AgentSection } from './AgentSection';
 
 export function FootprintAnalysis({
-  url = 'ws://localhost:3005/ws', // WebSocket URL
+  url = 'ws://localhost:3005/', // WebSocket URL, changed default to root path
   isStreaming,
   productUrl, // Product URL
   onStreamingComplete
@@ -164,35 +164,79 @@ export function FootprintAnalysis({
           } else if (message.startsWith('AgentTool(')) {
             // Process agent tool calls
             try {
-              const agentMatch = message.match(/^AgentTool\(([^)]+)\):\s*(\w+)\((.*)\)/);
+              const agentMatch = message.match(/^AgentTool\(([^)]+)\):/);
               if (agentMatch) {
                 const agentName = agentMatch[1];
-                const toolName = agentMatch[2];
-                const toolArgs = agentMatch[3];
-                const toolContent = `${toolName}(${toolArgs})`; // Construct the content for checking and storing
-                
-                setAgents(prev => {
-                  const agentData = prev[agentName] || { messages: [], summary: '', carbon: null, isCompleted: false };
-                  
-                  // Prevent duplicate "tool" messages
-                  const isDuplicateToolCall = agentData.messages.some(
-                    (existingMsg) => existingMsg.type === 'tool' && existingMsg.content === toolContent
-                  );
-                  if (isDuplicateToolCall) {
-                    return prev; // Don't add the duplicate message
-                  }
-                  
-                  return {
-                    ...prev,
-                    [agentName]: {
-                      ...agentData,
-                      messages: [...agentData.messages, { 
-                        type: 'tool', 
-                        content: toolContent 
-                      }],
+                const toolData = message.substring(message.indexOf(':') + 1).trim();
+
+                try {
+                  // Parse the JSON data for the tool call
+                  const toolInfo = JSON.parse(toolData);
+                  const toolName = toolInfo.name;
+                  const toolArgs = toolInfo.args;
+                  const toolId = toolInfo.id;
+
+                  // Format args for display
+                  let formattedArgs = '';
+                  if (toolArgs) {
+                    if (typeof toolArgs === 'object') {
+                      formattedArgs = Object.entries(toolArgs)
+                        .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
+                        .join(', ');
+                    } else {
+                      formattedArgs = String(toolArgs);
                     }
-                  };
-                });
+                  }
+
+                  const toolContent = `${toolName}(${formattedArgs})`; // Construct the content for checking and storing
+
+                  setAgents(prev => {
+                    const agentData = prev[agentName] || { messages: [], summary: '', carbon: null, isCompleted: false };
+
+                    // Prevent duplicate "tool" messages
+                    const isDuplicateToolCall = agentData.messages.some(
+                      (existingMsg) => existingMsg.type === 'tool' && existingMsg.content === toolContent
+                    );
+                    if (isDuplicateToolCall) {
+                      return prev; // Don't add the duplicate message
+                    }
+
+                    return {
+                      ...prev,
+                      [agentName]: {
+                        ...agentData,
+                        messages: [...agentData.messages, {
+                          type: 'tool',
+                          content: toolContent,
+                          toolId: toolId,
+                          toolName: toolName,
+                          toolArgs: toolArgs
+                        }],
+                      }
+                    };
+                  });
+                } catch (parseErr) {
+                  console.error('[Tool JSON Parse Error]:', parseErr);
+                  // Fallback to legacy format if JSON parsing fails
+                  const legacyMatch = message.match(/^AgentTool\(([^)]+)\):\s*(\w+)\((.*)\)/);
+                  if (legacyMatch) {
+                    const agentName = legacyMatch[1];
+                    const toolName = legacyMatch[2];
+                    const toolArgs = legacyMatch[3];
+                    const toolContent = `${toolName}(${toolArgs})`;
+
+                    setAgents(prev => {
+                      const agentData = prev[agentName] || { messages: [], summary: '', carbon: null, isCompleted: false };
+                      return {
+                        ...prev,
+                        [agentName]: {
+                          ...agentData,
+                          messages: [...agentData.messages, { type: 'tool', content: toolContent }],
+                        }
+                      };
+                    });
+                  }
+                }
               }
             } catch (err) {
               console.error('[Agent Tool Parse Error]:', err);
@@ -203,18 +247,45 @@ export function FootprintAnalysis({
               const agentMatch = message.match(/^AgentObs\(([^)]+)\):/);
               if (agentMatch) {
                 const agentName = agentMatch[1];
-                const observation = message.substring(message.indexOf(':') + 1).trim();
-                
-                setAgents(prev => {
-                  const agentData = prev[agentName] || { messages: [], summary: '', carbon: null, isCompleted: false };
-                  return {
-                    ...prev,
-                    [agentName]: {
-                      ...agentData,
-                      messages: [...agentData.messages, { type: 'observation', content: observation }],
-                    }
-                  };
-                });
+                const obsData = message.substring(message.indexOf(':') + 1).trim();
+
+                try {
+                  // Try to parse the JSON data
+                  const obsInfo = JSON.parse(obsData);
+                  const observation = obsInfo.content;
+                  const toolCallId = obsInfo.tool_call_id || '';
+                  const toolName = obsInfo.tool_name || '';
+
+                  setAgents(prev => {
+                    const agentData = prev[agentName] || { messages: [], summary: '', carbon: null, isCompleted: false };
+                    return {
+                      ...prev,
+                      [agentName]: {
+                        ...agentData,
+                        messages: [...agentData.messages, {
+                          type: 'observation',
+                          content: observation,
+                          toolCallId: toolCallId,
+                          toolName: toolName
+                        }],
+                      }
+                    };
+                  });
+                } catch (jsonErr) {
+                  console.error('[Observation JSON Parse Error]:', jsonErr);
+                  // Fallback to legacy format
+                  const observation = obsData;
+                  setAgents(prev => {
+                    const agentData = prev[agentName] || { messages: [], summary: '', carbon: null, isCompleted: false };
+                    return {
+                      ...prev,
+                      [agentName]: {
+                        ...agentData,
+                        messages: [...agentData.messages, { type: 'observation', content: observation }],
+                      }
+                    };
+                  });
+                }
               }
             } catch (err) {
               console.error('[Agent Observation Parse Error]:', err);
@@ -334,6 +405,42 @@ export function FootprintAnalysis({
           </div>
         );
       } else if (msg.type === 'tool') {
+        // Check if we have enhanced tool information
+        const hasEnhancedInfo = 'toolName' in msg && 'toolArgs' in msg;
+
+        if (hasEnhancedInfo) {
+          // Access the enhanced tool information
+          const toolName = msg.toolName as string;
+          const toolArgs = msg.toolArgs as Record<string, any>;
+          const toolId = (msg as any).toolId || '';
+
+          return (
+            <div key={index} className="pl-4 my-1 border-l-2 border-blue-200 text-gray-600 dark:text-gray-400 text-xs">
+              <div className="font-mono mb-1">
+                <span className="text-blue-600 dark:text-blue-400 font-medium">Using tool: </span>
+                <span className="text-emerald-600 dark:text-emerald-400">{toolName}</span>
+                {toolId && <span className="opacity-50 text-xs ml-1">#{toolId.substring(0, 6)}</span>}
+              </div>
+
+              {toolArgs && typeof toolArgs === 'object' && Object.keys(toolArgs).length > 0 && (
+                <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded font-mono text-xxs overflow-x-auto">
+                  {Object.entries(toolArgs).map(([key, value], i) => (
+                    <div key={i} className="flex">
+                      <span className="text-blue-500 dark:text-blue-400 mr-2">{key}:</span>
+                      <span className="text-gray-700 dark:text-gray-300 break-all">
+                        {typeof value === 'object'
+                          ? JSON.stringify(value)
+                          : String(value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // Fallback to original display if we don't have enhanced data
         return (
           <div key={index} className="pl-4 my-1 border-l-2 border-blue-200 text-gray-600 dark:text-gray-400 text-xs font-mono">
             <span className="text-blue-600 dark:text-blue-400">Using tool:</span>
@@ -341,9 +448,24 @@ export function FootprintAnalysis({
           </div>
         );
       } else if (msg.type === 'observation') {
+        // Check if we have enhanced observation information
+        const hasEnhancedInfo = 'toolCallId' in msg || 'toolName' in msg;
+        const toolCallId = (msg as any).toolCallId;
+        const toolName = (msg as any).toolName;
+
         return (
-          <div key={index} className="pl-4 my-1 border-l-2 border-gray-200 text-gray-500 dark:text-gray-400 text-xs">
-            <span className="opacity-75">Observation:</span> {msg.content}
+          <div key={index} className={`pl-4 my-1 border-l-2 ${hasEnhancedInfo ? 'border-teal-200' : 'border-gray-200'} text-gray-500 dark:text-gray-400 text-xs`}>
+            <div className="flex items-center mb-0.5">
+              <span className={`${hasEnhancedInfo ? 'text-teal-600 dark:text-teal-400' : 'opacity-75'} font-medium`}>
+                Result{toolName ? ` from ${toolName}` : ''}:
+              </span>
+              {toolCallId && (
+                <span className="opacity-50 text-xxs ml-1">#{toolCallId.substring(0, 6)}</span>
+              )}
+            </div>
+            <div className="mt-1 bg-gray-50 dark:bg-gray-800 p-1.5 rounded">
+              {msg.content}
+            </div>
           </div>
         );
       }
