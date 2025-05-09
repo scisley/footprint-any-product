@@ -32,7 +32,7 @@ if not openai_api_key:
 
 eol_agent = create_react_agent(
     #model=ChatOpenAI(model_name="o3"),
-    model=ChatOpenAI(model_name="gpt-4o", temperature=0, openai_api_key=openai_api_key),
+    model=ChatOpenAI(model_name="gpt-4.1", temperature=0, openai_api_key=openai_api_key),
     tools=[emissions_factor_finder_tool, calculator],
     prompt=eol_agent_prompt_text,
     response_format=EOLResponse,
