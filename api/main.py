@@ -1,8 +1,15 @@
 # Standard library imports
 import asyncio
 import json
+import os # Added to manipulate paths
+import sys # Added to manipulate Python's search path for modules
 import re # re might be needed by helpers, ensure it's here if so, or remove
 from typing import Dict, Any, Union # Union might not be needed directly here
+
+# Add the project root to sys.path to allow for absolute imports from the root
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 # Third-party imports
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
