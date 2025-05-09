@@ -10,7 +10,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
 
 # Local application imports (absolute imports from project root)
-from state import FootprintState
+from agents.state import FootprintState
 from agents.page_analysis import page_analysis_phase # Use the function from agents.page_analysis
 from agents.planner import planner_phase
 from agents.eol import eol_phase

@@ -1,6 +1,6 @@
 import asyncio
 from typing import Dict, Any
-from state import FootprintState
+from .state import FootprintState
 
 async def planner_phase(state: FootprintState) -> Dict[str, Any]:
     """

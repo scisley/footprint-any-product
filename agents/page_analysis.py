@@ -2,7 +2,7 @@ import asyncio
 from urllib.parse import urlparse
 from firecrawl import FirecrawlApp
 from typing import Dict, Any
-from state import FootprintState
+from .state import FootprintState
 import os
 import utils
 import re
