@@ -1,0 +1,38 @@
+[
+  {
+    "product_url": "https://www.apple.com/iphone-15-pro/",
+    "run_id": 0,
+    "brand": "Apple",
+    "category": "smartphone",
+    "description": "The iPhone 16 lineup offers advanced AI features, powerful cameras, fast performance, and enhanced privacy for everyday communication and creativity.",
+    "carbon_total": 36.87,
+    "carbon_by_phase": {
+      "materials": 0.81,
+      "manufacturing": 34.4,
+      "packaging": 0.26,
+      "transportation": 0.18,
+      "use": 1.04,
+      "eol": 0.18
+    },
+    "timestamp": 1746798382.192636,
+    "success": true
+  },
+  {
+    "product_url": "https://www.apple.com/iphone-15-pro/",
+    "run_id": 1,
+    "brand": "Apple",
+    "category": "smartphone",
+    "description": "The iPhone 16 lineup offers advanced smartphones with AI-powered features, cutting-edge cameras, strong privacy, and durable, customizable design.",
+    "carbon_total": 69.49000000000001,
+    "carbon_by_phase": {
+      "materials": 1.68,
+      "manufacturing": 66.0,
+      "packaging": 0.18,
+      "transportation": 0.07,
+      "use": 1.4,
+      "eol": 0.16
+    },
+    "timestamp": 1746798373.874339,
+    "success": true
+  }
+]
