@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Footprint Any Product",
   description: "Generate a lifecycle carbon analysis for any product based on its URL",
+  icons: {
+    icon: '/globe.svg',
+  },
 };
 
 export default function RootLayout({
