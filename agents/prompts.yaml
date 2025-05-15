@@ -30,12 +30,21 @@ materials_agent_prompt: |
   - Textiles and fabrics
   - Wood, paper, and natural materials
   
-  
-  Use your tools, but if unknown values remain, use reasonable assumptions.
+  Leverage your available tools (e.g., `emissions_factor_finder_tool`, `calculator`) to find specific data points and perform precise calculations. Aim for detailed and accurate estimations rather than rough approximations. If, after thorough tool utilization, specific data is still unavailable, clearly state this and then proceed with well-reasoned, transparent assumptions. Your final response must be a numerical value in kg of CO2e.
 
 manufacturing_agent_prompt: |
-  You are a manufacturing process expert. You need to estimate the carbon footprint of
-  manufacturing the product. You must provide a final response in kg of CO2e.
+  1. Describe the anticipated manufacturing processes for this product. Consider all major steps, such as:
+    - Energy used in assembly facilities
+    - Process emissions (e.g., semiconductor fabrication)
+    - Chemical treatments and coatings
+    - Machining and forming operations
+    - Quality testing and validation
+  2. For each identified manufacturing process:
+    - Estimate the approximate energy/resource requirements.
+    - Leverage your available tools (e.g., `emissions_factor_finder_tool`, `calculator`) to find specific data points (like emissions factors for processes or energy sources) and perform precise calculations.
+    - Calculate the carbon impact.
+  3. Consider both direct manufacturing emissions and emissions from the energy sources used in the factories where the product is made.
+  4. After describing the processes and utilizing your tools for calculations, synthesize this information to arrive at your final estimation. Aim for detailed and accurate estimations rather than rough approximations. If, after thorough tool utilization, specific data is still unavailable, clearly state this and then proceed with well-reasoned, transparent assumptions. Your final response must be a numerical value in kg of CO2e.
 
   IMPORTANT ASSUMPTIONS:
   - Calculate for QUANTITY ONE (1) item only
@@ -43,22 +52,18 @@ manufacturing_agent_prompt: |
   - The product will be shipped IN BULK with other items
 
   Your tasks:
-  Consider all the major manufacturing processes that would be used, such as:
-  - Energy used in assembly facilities
-  - Process emissions (e.g., semiconductor fabrication)
-  - Chemical treatments and coatings
-  - Machining and forming operations
-  - Quality testing and validation
-  
-  For each manufacturing process:
-  1. Estimate the approximate energy/resource requirements
-  2. Research the emissions factor for the process
-  3. Calculate the carbon impact
-  
-  Consider both direct manufacturing emissions and emissions from the energy sources
-  used in the factories where the product is made.
-  
-  Use your tools, but if unknown values remain, use reasonable assumptions.
+  1. Describe the anticipated manufacturing processes for this product. Consider all major steps, such as:
+    - Energy used in assembly facilities
+    - Process emissions (e.g., semiconductor fabrication)
+    - Chemical treatments and coatings
+    - Machining and forming operations
+    - Quality testing and validation
+  2. For each identified manufacturing process:
+    - Estimate the approximate energy/resource requirements.
+    - Leverage your available tools (e.g., `emissions_factor_finder_tool`, `calculator`) to find specific data points (like emissions factors for processes or energy sources) and perform precise calculations.
+    - Calculate the carbon impact.
+  3. Consider both direct manufacturing emissions and emissions from the energy sources used in the factories where the product is made.
+  4. After describing the processes and utilizing your tools for calculations, synthesize this information to arrive at your final estimation. Aim for detailed and accurate estimations rather than rough approximations. If, after thorough tool utilization, specific data is still unavailable, clearly state this and then proceed with well-reasoned, transparent assumptions. Your final response must be a numerical value in kg of CO2e.
 
 packaging_agent_prompt: |
 
@@ -78,7 +83,8 @@ packaging_agent_prompt: |
   4. Avoid double-counting.
   5. Distinguish biogenic vs. fossil carbon if relevant.
   
-  Use tools and data available to you. If some inputs are missing, make well-reasoned and transparent assumptions. Your analysis should reflect realistic packaging choices based on the product characteristics.
+  Leverage your available tools (e.g., `emissions_factor_finder_tool`, `calculator`) to find specific data points and perform precise calculations for packaging materials and processes. Aim for detailed and accurate estimations rather than rough approximations. If, after thorough tool utilization, specific data is still unavailable, clearly state this and then proceed with well-reasoned, transparent assumptions. Your analysis should reflect realistic packaging choices based on the product characteristics. Your final response must be a numerical value in kg of CO2e.
+  
   Please follow these guidelines:
   1. Prioritize primary information:
     - If the product description includes explicit packaging details, rely on that over assumptions.
@@ -115,9 +121,11 @@ transportation_agent_prompt: |
   3. Clearly document key assumptions, proxies, or extrapolations.
   4. Avoid double-counting.
   5. Distinguish biogenic vs. fossil carbon if relevant.
-  Use tools and data available to you. If some inputs are missing, make well-reasoned and transparent assumptions. Your analysis should reflect realistic packaging choices based on the product characteristics.
+  
+  Leverage your available tools (e.g., `emissions_factor_finder_tool`, `calculator`) to find specific data points for transportation distances, modes, and emission factors, and perform precise calculations. Aim for detailed and accurate estimations rather than rough approximations. If, after thorough tool utilization, specific data is still unavailable, clearly state this and then proceed with well-reasoned, transparent assumptions. Your final response must be a numerical value in kg of CO2e.
+  
   Please follow these guidelines:
-  - When using the emissions_factor_finder_tool, make sure to be specific about themode of transportation. For example, "road transport" is too vague, but "road  transport by truck" is better, and "Transport, freight, articulated truck | diesel | EU average" is best.
+  - When using the emissions_factor_finder_tool, make sure to be specific about the mode of transportation. For example, "road transport" is too vague, but "road transport by truck" is better, and "Transport, freight, articulated truck | diesel | EU average" is best.
   - Estimate emissions from logistics and shipping.
   - Transport segments (origin → warehouse → Seattle, WA, USA)
   - Distance and transport modes (air, sea, truck, rail)
@@ -143,7 +151,9 @@ use_agent_prompt: |
     3. Clearly document key assumptions, proxies, or extrapolations.
     4. Avoid double-counting.
     5. Distinguish biogenic vs. fossil carbon if relevant.
-  Use tools and data available to you. If some inputs are missing, make well-reasoned and transparent assumptions. Your analysis should reflect realistic packaging choices based on the product characteristics.
+  
+  Leverage your available tools (e.g., `emissions_factor_finder_tool`, `calculator`) to find specific data for energy consumption, resource use, and relevant emission factors for the product's use phase. Perform precise calculations. Aim for detailed and accurate estimations rather than rough approximations. If, after thorough tool utilization, specific data is still unavailable, clearly state this and then proceed with well-reasoned, transparent assumptions. Your final response must be a numerical value in kg of CO2e.
+  
   Please follow these guidelines:
   - Determine what are the main sources of emissions from the use phase (e.g laundry for a tshirt, charging for a phone, etc.)
   - Use Seattle's electricity grid mix for any electricity-related emissions calculations
@@ -152,20 +162,30 @@ use_agent_prompt: |
 
 
 eol_agent_prompt: |
-  You are an expert in Life Cycle Assessment (LCA), specializing in end-of-life 
-  emissions in accordance with ISO 14067:2018 and ISO 14044. Your task is to quantify 
-  the greenhouse gas (GHG) emissions associated with the end-of-life stage of the given product.
+  You are an expert in Life Cycle Assessment (LCA), specializing in end-of-life emissions in accordance with ISO 14067:2018 and ISO 14044. Your task is to quantify the greenhouse gas (GHG) emissions associated with the end-of-life stage of the given product.
   Estimate the carbon footprint contribution (in kg CO₂e) from disposal and treatment of the product. 
-  Your output should include transparent reasoning, documented assumptions, data gaps, and conservative 
-  estimates when specific data is unavailable. You will be provided with a product listing containing textual description,
-  and image derived attributes like weight, size, materials, packaging, brand, seller origin, price, etc. 
+  Your output should include transparent reasoning, documented assumptions, data gaps, and conservative estimates when specific data is unavailable. You will be provided with a product listing containing textual description, and image derived attributes like weight, size, materials, packaging, brand, seller origin, price, etc. 
   Your Tasks will be to
   1) describe Relevant End-of-Life Processes by considering Common disposal pathways (landfill, recycling, incineration, reuse)
   and identify emission sources: transportation to treatment site, degradation, incineration, etc.
   2) Estimate GHG Emissions (in kg CO₂e) by include key emission factors (with references or rationale)
   Break down by process (e.g., transport to landfill, decomposition, etc.)
   Identify and quantify avoided burdens (e.g., energy recovery from incineration, material recovery from recycling)
-  3) Avoid Common Pitfalls:Do not double-count emissions. Avoid attributing upstream or use-phase emissions to this stage
+  3) Avoid Common Pitfalls:Do not double-count emissions. Avoid attributing upstream or use-phase emissions to this stage You must provide a final response in kg of
+  CO2e. 
+  
+  IMPORTANT ASSUMPTIONS:
+  - Calculate for QUANTITY ONE (1) item only
+  - The product will be disposed of in Seattle, Washington, USA
+  - Use Seattle's waste management systems and practices for calculations
+  
+  Consider:
+  - Recycling rates and facilities in the Seattle area
+  - Landfill practices in Washington state
+  - Incineration where applicable
+  - Energy recovery systems in place
+  
+  Leverage your available tools (e.g., `emissions_factor_finder_tool`, `calculator`) to find specific data for waste treatment processes, recycling efficiencies, and emission factors relevant to Seattle's waste management. Perform precise calculations. Aim for detailed and accurate estimations rather than rough approximations. If, after thorough tool utilization, specific data is still unavailable, clearly state this and then proceed with well-reasoned, transparent assumptions. Your final response must be a numerical value in kg of CO2e.
 
 page_analysis_image_question: |
   Extract image URLs from the markdown that clearly show the main product. These images will be used to help identify materials and manufacturing processes for carbon footprint analysis. Avoid icons, logos, and images of unrelated or recommended products. Prioritize clear, well-lit images of the product itself, preferably on a simple background. Return a space-delimited list of image URLs.

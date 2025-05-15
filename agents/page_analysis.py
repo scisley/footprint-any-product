@@ -64,9 +64,13 @@ async def page_analysis_phase(state: FootprintState) -> Dict[str, Any]:
     short_description = query_markdown(markdown, short_description_question)
     long_description = query_markdown(markdown, long_description_question)
     
+    # Limit product images to the first 10
+    image_urls = list(images.keys())[:10]
+    print(f"Limiting product images from {len(images)} to {len(image_urls)} (max 10)")
+
     return {
         "url": product_url,
-        "product_image_urls": list(images.keys()),
+        "product_image_urls": image_urls,
         "brand": brand,
         "category": category,
         "short_description": short_description,
