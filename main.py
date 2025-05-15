@@ -1,33 +1,19 @@
 # Standard library imports
 import asyncio
 import json
-import os # Added to manipulate paths
-import sys # Added to manipulate Python's search path for modules
-import re # re might be needed by helpers, ensure it's here if so, or remove
-from typing import Dict, Any, Union, Set # Union might not be needed directly here
+from typing import Union # Union might not be needed directly here
 
-# Add the project root to sys.path to allow for absolute imports from the root
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+# Load environment variables from .env.local file Do this before project
+# specific files as some want environment variables already loaded.
+from dotenv import load_dotenv
+load_dotenv(".env.local")
 
-# Third-party imports
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-import uvicorn # Added to run the FastAPI app
-
-# Local application imports
-# Adjust imports to be absolute from the project root
-from agents.state import FootprintState # For type hinting initial_graph_state
-import utils # Ensure utils is imported for load_environment
-
-# Import graph setup and streaming helpers from .graph module
-# Changed to absolute import to work when api/main.py is run directly
+from agents.state import FootprintState
 from api.graph import setup_graph, process_phase_update, process_summarizer_update, send_agent_messages, page_analysis_phase
 
 
 # --- FastAPI App Setup ---
-
-# Create FastAPI app
 app = FastAPI(
     title="Footprint-Any-Product API",
     description="Carbon footprint analysis for any product with real-time streaming results",
@@ -197,33 +183,33 @@ async def websocket_endpoint(websocket: WebSocket, recursion_limit: int = 50):
                         
                         # For real agent results, output a detailed debug
                         if isinstance(phase_data, dict):
-                                agent_debug = {
-                                    "agent": phase_key,
-                                    "has_messages": "messages" in phase_data and isinstance(phase_data["messages"], list),
-                                    "message_count": len(phase_data.get("messages", [])) if isinstance(phase_data.get("messages"), list) else 0,
-                                    "has_summary": "summary" in phase_data,
-                                    "has_carbon": "carbon" in phase_data,
-                                }
-                                print(f"IMPORTANT - Agent data found: {agent_debug}")
-                                
-                                # Always send phase data if we have it in the state, even if not in updates
-                                if "carbon" in phase_data:
-                                    await websocket.send_text(f"AgentStatus({phase_key}): Carbon estimate: {phase_data['carbon']} kg CO2e")
-                                    await websocket.send_text(f"PhaseCarbon({phase_key}): {phase_data['carbon']}")
-                                
-                                # Send phase header
-                                await websocket.send_text(f"PhaseStart: {phase_key}")
-                                await asyncio.sleep(0.1)
-                                
-                                # Send messages
-                                if "messages" in phase_data and isinstance(phase_data["messages"], list):
-                                    msg_count = len(phase_data["messages"])
-                                    await websocket.send_text(f"SystemMessage: Found {msg_count} messages for {phase_key}")
-                                    await send_agent_messages(websocket, phase_key, phase_data["messages"])
-                                
-                                # Send summary
-                                if "summary" in phase_data:
-                                    await websocket.send_text(f"PhaseSummary({phase_key}): {phase_data['summary']}")
+                            agent_debug = {
+                                "agent": phase_key,
+                                "has_messages": "messages" in phase_data and isinstance(phase_data["messages"], list),
+                                "message_count": len(phase_data.get("messages", [])) if isinstance(phase_data.get("messages"), list) else 0,
+                                "has_summary": "summary" in phase_data,
+                                "has_carbon": "carbon" in phase_data,
+                            }
+                            print(f"IMPORTANT - Agent data found: {agent_debug}")
+                            
+                            # Always send phase data if we have it in the state, even if not in updates
+                            if "carbon" in phase_data:
+                                await websocket.send_text(f"AgentStatus({phase_key}): Carbon estimate: {phase_data['carbon']} kg CO2e")
+                                await websocket.send_text(f"PhaseCarbon({phase_key}): {phase_data['carbon']}")
+                            
+                            # Send phase header
+                            await websocket.send_text(f"PhaseStart: {phase_key}")
+                            await asyncio.sleep(0.1)
+                            
+                            # Send messages
+                            if "messages" in phase_data and isinstance(phase_data["messages"], list):
+                                msg_count = len(phase_data["messages"])
+                                await websocket.send_text(f"SystemMessage: Found {msg_count} messages for {phase_key}")
+                                await send_agent_messages(websocket, phase_key, phase_data["messages"])
+                            
+                            # Send summary
+                            if "summary" in phase_data:
+                                await websocket.send_text(f"PhaseSummary({phase_key}): {phase_data['summary']}")
                     
                 # Handle updates mode as before, but with better debugging
                 if mode == "updates" and isinstance(event, dict):
@@ -321,14 +307,3 @@ async def websocket_endpoint(websocket: WebSocket, recursion_limit: int = 50):
                 await websocket.send_text(f"ErrorMessage: {str(e)}")
         except Exception as send_err:
             print(f"WebSocket error sending error message: {send_err}")
-
-if __name__ == "__main__":
-    # Load environment variables once at the start
-    utils.load_environment()
-
-    # Set LangChain project for logging
-    os.environ['LANGCHAIN_PROJECT'] = 'footprint-any-product'
-
-    # Run the Uvicorn server
-    # Use the same port as in the frontend configuration
-    uvicorn.run(app, host="127.0.0.1", port=3005)

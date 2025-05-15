@@ -1,16 +1,14 @@
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from tools.calculator import calculator
-from tools.emissions_factors import emissions_factor_finder_tool
+from tools.calculator.calculator import calculator
+from tools.emissions_factors.emissions_factors import emissions_factor_finder_tool
 from .state import FootprintState
 import os
 import logging
 import yaml
 from pathlib import Path
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class TransportationResponse(BaseModel):

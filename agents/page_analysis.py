@@ -1,17 +1,15 @@
 import asyncio
+import os
+import re
+import yaml
 from urllib.parse import urlparse
 from firecrawl import FirecrawlApp
 from typing import Dict, Any
 from .state import FootprintState
-import os
-import utils
-import re
 from langchain.schema import HumanMessage
 from langchain_openai import ChatOpenAI
-import yaml
 from pathlib import Path
 
-utils.load_environment()
 api_key = os.environ["FIRECRAWL_API_KEY"]
 image_link_regex = r"https?://\S+\.(?:jpg|jpeg|png|gif|svg)(?:\?[\w=&]*)?"
 

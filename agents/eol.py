@@ -1,16 +1,14 @@
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-from tools.calculator import calculator
-from tools.emissions_factors import emissions_factor_finder_tool
+from tools.calculator.calculator import calculator
+from tools.emissions_factors.emissions_factors import emissions_factor_finder_tool
 from .state import FootprintState
 import os
 import logging
 import yaml
 from pathlib import Path
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class EOLResponse(BaseModel):
@@ -24,14 +22,8 @@ with open(_PROMPTS_FILE, 'r') as f:
 
 eol_agent_prompt_text = _prompts_data['eol_agent_prompt']
 
-logger.info(f"Creating EOL agent with OPENAI_API_KEY: {bool(os.environ.get('OPENAI_API_KEY'))}")
-# Pass the API key explicitly
-openai_api_key = os.environ.get("OPENAI_API_KEY")
-if not openai_api_key:
-    logger.error("OPENAI_API_KEY not found in environment variables!")
-
 eol_agent = create_react_agent(
-    model=ChatOpenAI(model_name="gpt-4.1-2025-04-14", openai_api_key=openai_api_key),
+    model=ChatOpenAI(model_name="gpt-4.1-2025-04-14"),
     tools=[emissions_factor_finder_tool, calculator],
     prompt=eol_agent_prompt_text,
     response_format=EOLResponse,
