@@ -1,4 +1,4 @@
-from tools.emissions_factors_state import EFState, EmissionsFactor
+from tools.emissions_factors.state import EFState, EmissionsFactor
 from langchain_openai import ChatOpenAI
 
 def parametric_knowledge_ef_finder(state: EFState):
