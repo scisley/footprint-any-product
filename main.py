@@ -2,13 +2,13 @@
 import asyncio
 import json
 from typing import Union # Union might not be needed directly here
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 # Load environment variables from .env.local file Do this before project
 # specific files as some want environment variables already loaded.
 from dotenv import load_dotenv
 load_dotenv(".env.local")
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from agents.state import FootprintState
 from api.graph import setup_graph, process_phase_update, process_summarizer_update, send_agent_messages, page_analysis_phase
 
@@ -37,7 +37,7 @@ def read_item(item_id: int, q: Union[str, None] = None):
 
 @app.websocket("/ws")
 @app.websocket("/") # Add this line to also handle WebSocket connections at the root path
-async def websocket_endpoint(websocket: WebSocket, recursion_limit: int = 50):
+async def websocket_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint for streaming real-time carbon footprint analysis.
     
@@ -83,14 +83,19 @@ async def websocket_endpoint(websocket: WebSocket, recursion_limit: int = 50):
         
         # Initialize and run the LangGraph workflow
         graph = setup_graph()
-        config = {"configurable": {"thread_id": "websocket-session"}}
+        config = {
+            "configurable": {
+                "thread_id": "websocket-session",
+                "model": "low", # Defines the LLM to use
+            }
+        }
         
         # Prepare the initial state for the graph, primarily with the URL
-        initial_graph_state: FootprintState = { # Type hint for clarity
+        initial_graph_state: FootprintState = {
             "url": product_url,
             "user_input": f"Analyze product from URL: {product_url}", # This can be used by the planner if needed
             "messages": [("human", f"Analyze carbon footprint for product at URL: {product_url}")]
-            # brand, category, short_description, long_description, product_image_urls will be populated by page_analysis_phase
+            # brand, category, short_description, long_description, product_images will be populated by page_analysis_phase
         }
         
         # Stream the workflow execution
@@ -100,19 +105,9 @@ async def websocket_endpoint(websocket: WebSocket, recursion_limit: int = 50):
             stream_mode=["updates", "values"]
         )
 
-        # Track processed nodes to prevent infinite recursion
-        processed_nodes: Set[str] = set()
-        recursion_count = 0
-
         # Process streaming results
         async for chunk in stream:
             try:
-                # Check for recursion limit
-                recursion_count += 1
-                if recursion_count > recursion_limit:
-                    await websocket.send_text("ErrorMessage: Recursion limit reached in analysis. Please try again with simpler input.")
-                    print(f"WebSocket error: Recursion limit of {recursion_limit} reached without hitting a stop condition")
-                    break
 
                 # More detailed debugging of chunked results
                 chunk_type = type(chunk).__name__
@@ -159,15 +154,14 @@ async def websocket_endpoint(websocket: WebSocket, recursion_limit: int = 50):
                             if "long_description" in event:
                                 await websocket.send_text(f"PageAnalysisLongDescription: {event['long_description']}")
                                 await asyncio.sleep(0.05)
-                            if "product_image_urls" in event and isinstance(event["product_image_urls"], list):
+                            if "product_images" in event and isinstance(event["product_images"], list):
                                 try:
-                                    # Send image URLs as a JSON string
-                                    await websocket.send_text(f"PageAnalysisImageUrls: {json.dumps(event['product_image_urls'])}")
+                                    # Send ProductImage objects as JSON using to_dict() method
+                                    image_dicts = [img.to_dict() for img in event['product_images']]
+                                    await websocket.send_text(f"PageAnalysisImages: {json.dumps(image_dicts)}")
                                     await asyncio.sleep(0.05)
                                 except Exception as json_err:
-                                    print(f"Error serializing image URLs: {json_err}")
-                                    # Optionally send an error message to the client
-                                    # await websocket.send_text(f"ErrorMessage: Failed to send image URLs: {json_err}")
+                                    print(f"Error serializing images: {json_err}")
                             continue # Move to next phase_name check
 
                         # Check for agent outputs and node outputs (planner, materials, etc.)

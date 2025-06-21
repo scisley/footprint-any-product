@@ -1,4 +1,3 @@
-import asyncio
 from typing import Dict, Any
 from .state import FootprintState
 
@@ -7,7 +6,6 @@ async def planner_phase(state: FootprintState) -> Dict[str, Any]:
     Initial node that sets up the workflow based on pre-analyzed product details.
     Receives product characteristics (brand, category, description) from the state.
     """
-    await asyncio.sleep(0.2)
 
     # Product details are now expected to be in the state from page_analysis_phase
     brand = state.get("brand", "N/A")
@@ -36,6 +34,5 @@ async def planner_phase(state: FootprintState) -> Dict[str, Any]:
         "short_description": short_description,
         "long_description": long_description,
         "url": product_url, # Pass along the URL
-        "product_image_urls": state.get("product_image_urls"), # Pass along image URLs
         # Any other fields populated by page_analysis_phase that subsequent agents might need
     }
