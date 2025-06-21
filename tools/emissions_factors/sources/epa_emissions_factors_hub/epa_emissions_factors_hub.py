@@ -2,7 +2,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from tools.emissions_factors.state import EFState
-import os
+from pathlib import Path
 
 class EPAEmissionsFactor(BaseModel):
     CO2e_factor: float = Field(description="The carbon emissions factor (use -1 if no emissions factor can be found)")
@@ -18,6 +18,7 @@ def epa_ef_finder(state:EFState):
         temperature=0,
     ).with_structured_output(EPAEmissionsFactor)
     
+    # TODO: Move to yaml file
     base_sys_prompt = """
     You are an expert at identifying the most appropriate emission factor given
     a process description and phase (e.g. manufacturing, transportation, etc).
@@ -26,7 +27,7 @@ def epa_ef_finder(state:EFState):
     for the units."""
 
     # Load and append the EPA emissions data
-    data_path = os.path.join(os.path.dirname(__file__), "../..", "data", "epa", "GHG-Emission-Factors-Hub.md")
+    data_path = Path(__file__).parent / "GHG-Emission-Factors-Hub.md"
     with open(data_path, 'r') as f:
         epa_data = f.read()
     
@@ -40,8 +41,8 @@ def epa_ef_finder(state:EFState):
         {"role": "system", "content": sys_prompt},
         {"role": "user", "content": prompt}
     ])
-    #print(response)
 
+    # Convert units to standardized form (e.g kgCO2/kWh)
     converted = response.model_dump()
     if converted["units"] == "lbCO2/MWh":
         converted["CO2e_factor"] = converted["CO2e_factor"] * 0.453592/1000

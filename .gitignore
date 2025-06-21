@@ -218,7 +218,10 @@ cython_debug/
 
 # Local stuff I don't want to commit
 steve-sandbox.ipynb
+Demo.ipynb
 .aider*
 .mcp.json
 **/.claude/settings.local.json
 
+# Cache directory
+cache/

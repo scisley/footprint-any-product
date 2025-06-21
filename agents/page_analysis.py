@@ -1,81 +1,109 @@
-import asyncio
 import os
-import re
-import yaml
+import json
+from pathlib import Path
 from urllib.parse import urlparse
 from firecrawl import FirecrawlApp
 from typing import Dict, Any
 from .state import FootprintState
+from .product_image import ProductImage
 from langchain.schema import HumanMessage
-from langchain_openai import ChatOpenAI
-from pathlib import Path
+from langchain_core.runnables import RunnableConfig
+from api.config import MODELS, get_prompt
+from pydantic import BaseModel, Field
+from langchain_core.messages import SystemMessage, HumanMessage
+import hashlib
+
+# Create cache directory if it doesn't exist
+CACHE_DIR = Path("cache/markdown")
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 api_key = os.environ["FIRECRAWL_API_KEY"]
-image_link_regex = r"https?://\S+\.(?:jpg|jpeg|png|gif|svg)(?:\?[\w=&]*)?"
+sys_prompt = get_prompt('page_analysis_sys_prompt')
 
-# Load prompts from YAML
-_PROMPTS_FILE = Path(__file__).parent / "prompts.yaml"
-with open(_PROMPTS_FILE, 'r') as f:
-    _prompts_data = yaml.safe_load(f)
-
-image_question = _prompts_data['page_analysis_image_question']
-brand_question = _prompts_data['page_analysis_brand_question']
-category_question = _prompts_data['page_analysis_category_question']
-short_description_question = _prompts_data['page_analysis_short_description_question']
-long_description_question = _prompts_data['page_analysis_long_description_question']
-
-llm = ChatOpenAI(model_name="gpt-4.1-2025-04-14")
-
-def trim_url(url):
-    parsed = urlparse(url)
-    return parsed.scheme + '://' + parsed.netloc + parsed.path
-
-def query_markdown(markdown, question):
-    return llm.invoke(f"{question} \n\n {markdown}").content
-
-def query_images(question, images):
-    return llm.invoke([
-        HumanMessage(content=[
-            {"type": "text", "text": question},
-            *[{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image}"}} for image in images.values()]
-        ])]).content
+class PageDetails(BaseModel):
+    brand: str = Field(description=get_prompt('page_analysis_brand_question'))
+    images: list[str] = Field(description=get_prompt('page_analysis_image_question'))
+    category: str = Field(description=get_prompt('page_analysis_category_question'))
+    short_description: str = Field(description=get_prompt('page_analysis_short_description_question'))
+    long_description: str = Field(description=get_prompt('page_analysis_long_description_question'))
 
 
-async def page_analysis_phase(state: FootprintState) -> Dict[str, Any]:
+async def page_analysis_phase(state: FootprintState, config: RunnableConfig) -> Dict[str, Any]:
     """
     Analyzes the product URL using PageAnalyzer to extract initial product details.
     """
-    await asyncio.sleep(0.1) # Small delay for streaming appearance
-    
+
+    model = config["configurable"].get("model", "low")
+    llm = MODELS[model].with_structured_output(PageDetails)
+
+    def trim_url(url):
+        parsed = urlparse(url)
+        return parsed.scheme + '://' + parsed.netloc + parsed.path
+
     # Scrape the markdown
     product_url = trim_url(state["url"])
-    state['url'] = product_url
-    markdown = FirecrawlApp(api_key=api_key).scrape_url(product_url, formats=['markdown']).markdown
-    print(f"Scraped markdown for {product_url}")
+    markdown = get_page_markdown(product_url)
 
-    # Extract images
-    image_urls_response = llm.invoke(f"{image_question} \n\n {markdown}").content
-    images = dict([(image_url, None) for image_url in re.findall(image_link_regex, image_urls_response)])
-    print(f"Extracted {len(images)} image urls from {product_url}")
-
-    # Extracted data
-    brand = query_markdown(markdown, brand_question)
-    category = query_markdown(markdown, category_question)
-    short_description = query_markdown(markdown, short_description_question)
-    long_description = query_markdown(markdown, long_description_question)
+    response: PageDetails = llm.invoke([
+        SystemMessage(sys_prompt),
+        HumanMessage(markdown)
+    ])
     
     # Limit product images to the first 10
-    image_urls = list(images.keys())[:10]
-    print(f"Limiting product images from {len(images)} to {len(image_urls)} (max 10)")
+    image_urls = response.images[:10]
+    
+    # Create ProductImage objects and download/cache all images
+    product_images = await ProductImage.download_all_images(image_urls, product_url)
 
     return {
-        "url": product_url,
-        "product_image_urls": image_urls,
-        "brand": brand,
-        "category": category,
-        "short_description": short_description,
-        "long_description": long_description,
-        "messages": state.get("messages", []) + [ # Append to existing messages
-            {"role": "ai", "content": f"Page analysis complete for {product_url}. Brand: {brand}, Category: {category}."}
+        "product_images": product_images,
+        "brand": response.brand,
+        "category": response.category,
+        "short_description": response.short_description,
+        "long_description": response.long_description,
+        "messages": [
+            {"role": "ai", "content": f"Page analysis complete for {product_url}. Brand: {response.brand}, Category: {response.category}."}
         ]
     }
+
+def hash_url(url: str) -> str:
+    return hashlib.blake2s(url.encode(), digest_size=8).hexdigest()
+
+def get_cached_markdown(url: str) -> str:
+    """
+    Get cached markdown content for a URL if it exists.
+    Returns None if no cache exists.
+    """
+    hashed_url = hash_url(url)
+    cache_file = CACHE_DIR / hashed_url / f"{hashed_url}.json"
+    if cache_file.exists():
+        with open(cache_file, 'r') as f:
+            print(f"Using cached markdown for {url}, {cache_file}")
+            return json.load(f)['markdown']
+    return None
+
+def cache_markdown(url: str, markdown: str) -> None:
+    """
+    Cache markdown content for a URL.
+    """
+    hashed_url = hash_url(url)
+    cache_file = CACHE_DIR / hashed_url / f"{hashed_url}.json"
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(cache_file, 'w') as f:
+        json.dump({'url': url, 'markdown': markdown}, f)
+
+def get_page_markdown(url: str, use_cache: bool = True) -> str:
+    """
+    Get the markdown for a product page.
+    If use_cache is True, will try to get from cache first.
+    If not in cache or use_cache is False, will scrape and cache the result.
+    """
+    if use_cache:
+        cached = get_cached_markdown(url)
+        if cached is not None:
+            return cached
+    print(f"Scraping {url}")
+    markdown = FirecrawlApp(api_key=api_key).scrape_url(url, formats=['markdown']).markdown
+    cache_markdown(url, markdown)
+    return markdown
+

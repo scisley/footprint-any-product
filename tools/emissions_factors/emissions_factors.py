@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, START, END
-from tools.emissions_factors.sources.epa_emissions_factors_hub import epa_ef_finder
+from tools.emissions_factors.sources.epa_emissions_factors_hub.epa_emissions_factors_hub import epa_ef_finder
 from tools.emissions_factors.sources.parametric_knowledge import parametric_knowledge_ef_finder
 from tools.emissions_factors.state import EFState
 

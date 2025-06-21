@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Code should work when executed regularly and when executed or called from within a Jupyter notebook.
+- Always consider the root cause of an issue. Don't fix the symptom if you can identify the root of the problem.

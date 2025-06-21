@@ -2,6 +2,7 @@ from typing import Annotated, TypedDict
 from langgraph.graph import START, END
 from langgraph.graph.message import add_messages
 from pydantic import Field
+from .product_image import ProductImage
 
 class PhaseData(TypedDict):
     messages: list
@@ -18,7 +19,7 @@ class FootprintState(TypedDict):
     short_description: str
     long_description: str
     material_description: str # A natural language description of the materials in the product
-    product_image_urls: list[str]
+    product_images: list[ProductImage]
     weight_kg: float
     planner: PhaseData
     materials: PhaseData

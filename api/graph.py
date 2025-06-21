@@ -3,13 +3,10 @@ import asyncio
 import json
 import os
 import re
-from typing import Dict, Any, Union, List
-
-# Third-party imports
-from langchain_openai import ChatOpenAI
+from typing import Dict, Any, List, TypedDict
 from langgraph.graph import StateGraph, START, END
+from langchain.chat_models import init_chat_model
 
-# Local application imports (absolute imports from project root)
 from agents.state import FootprintState
 from agents.page_analysis import page_analysis_phase # Use the function from agents.page_analysis
 from agents.planner import planner_phase
@@ -19,14 +16,9 @@ from agents.manufacturing import manufacturing_phase
 from agents.packaging import packaging_phase
 from agents.transportation import transportation_phase
 from agents.use import use_phase
-# Note: utils is not directly used in this file after refactor,
-# but load_environment is called in the root main.py
+from api.config import ConfigSchema
 
-# --- LangGraph Setup ---
-# The page_analysis_phase is now imported directly from agents.page_analysis
-# and will be used in graph_builder.add_node("page_analysis_phase", page_analysis_phase)
-
-def setup_graph() -> Any:
+def setup_graph():
     """
     Initialize and configure the LangGraph workflow.
     
@@ -36,15 +28,6 @@ def setup_graph() -> Any:
     Returns:
         Compiled LangGraph instance ready for execution
     """
-    # Get API key from environment
-    openai_api_key = os.environ.get("OPENAI_API_KEY")
-    
-    # Configure LLM
-    model = ChatOpenAI(
-        model_name="gpt-4o", 
-        temperature=0,
-        openai_api_key=openai_api_key
-    )
     
     # Set up LangSmith tracing if available (for monitoring and debugging)
     if os.environ.get("LANGCHAIN_API_KEY"):
@@ -52,7 +35,7 @@ def setup_graph() -> Any:
         os.environ["LANGCHAIN_PROJECT"] = os.environ.get("LANGCHAIN_PROJECT", "footprint-any-product")
     
     # Initialize the workflow graph
-    graph_builder = StateGraph(FootprintState)
+    graph_builder = StateGraph(FootprintState, config_schema=ConfigSchema)
     
     # Add page analysis node
     graph_builder.add_node("page_analysis_phase", page_analysis_phase)
