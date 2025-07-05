@@ -9,8 +9,9 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from dotenv import load_dotenv
 load_dotenv(".env.local")
 
-from agents.state import FootprintState
-from api.graph import setup_graph, process_phase_update, process_summarizer_update, send_agent_messages, page_analysis_phase
+from lca_core.agents.state import FootprintState
+from lca_core.graph import setup_graph
+from websocket_helpers import process_phase_update, process_summarizer_update, send_agent_messages
 
 
 # --- FastAPI App Setup ---

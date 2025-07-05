@@ -3,19 +3,19 @@ import hashlib
 import time
 import pycountry
 import searoute
-from api import Q_
+from lca_core.utils import Q_
 from pydantic import BaseModel, Field
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from typing import List, Optional, Dict, Any, Tuple, Literal
 from pathlib import Path
-from tools.emissions_factors.emissions_factors import emissions_factor_finder_tool
+from lca_core.tools.emissions_factors.emissions_factors import emissions_factor_finder_tool
 from geopy.distance import geodesic
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 # Create cache directory for geocoding
-CACHE_DIR = Path("cache/geocoding")
+CACHE_DIR = Path("lca_core/cache/geocoding")
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Global rate limiting for Nominatim API

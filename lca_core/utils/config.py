@@ -2,7 +2,7 @@ import yaml
 from typing_extensions import TypedDict
 from langchain.chat_models import init_chat_model
 from pathlib import Path
-from api.units import lca_units
+from lca_core.utils.units import lca_units
 
 class ConfigSchema(TypedDict):
     model: str
