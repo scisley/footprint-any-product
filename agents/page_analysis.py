@@ -1,9 +1,10 @@
 import os
 import json
+import asyncio
 from pathlib import Path
 from urllib.parse import urlparse
 from firecrawl import FirecrawlApp
-from typing import Dict, Any
+from typing import Dict, Any, List
 from .state import FootprintState
 from .product_image import ProductImage
 from langchain.schema import HumanMessage
@@ -12,6 +13,7 @@ from api.config import MODELS, get_prompt
 from pydantic import BaseModel, Field
 from langchain_core.messages import SystemMessage, HumanMessage
 import hashlib
+from tools.image_analysis.image_analysis import analyze_image
 
 # Create cache directory if it doesn't exist
 CACHE_DIR = Path("cache/markdown")
@@ -20,6 +22,9 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 api_key = os.environ["FIRECRAWL_API_KEY"]
 sys_prompt = get_prompt('page_analysis_sys_prompt')
 
+# Get system prompt for image analysis from YAML
+image_analysis_prompt = get_prompt('image_analysis_prompt')
+
 class PageDetails(BaseModel):
     brand: str = Field(description=get_prompt('page_analysis_brand_question'))
     images: list[str] = Field(description=get_prompt('page_analysis_image_question'))
@@ -27,13 +32,13 @@ class PageDetails(BaseModel):
     short_description: str = Field(description=get_prompt('page_analysis_short_description_question'))
     long_description: str = Field(description=get_prompt('page_analysis_long_description_question'))
 
-
 async def page_analysis_phase(state: FootprintState, config: RunnableConfig) -> Dict[str, Any]:
     """
     Analyzes the product URL using PageAnalyzer to extract initial product details.
     """
 
     model = config["configurable"].get("model", "low")
+    image_limit = config["configurable"].get("image_limit", 6)
     llm = MODELS[model].with_structured_output(PageDetails)
 
     def trim_url(url):
@@ -49,11 +54,16 @@ async def page_analysis_phase(state: FootprintState, config: RunnableConfig) -> 
         HumanMessage(markdown)
     ])
     
-    # Limit product images to the first 10
-    image_urls = response.images[:10]
+    # Limit product images
+    image_urls = response.images[:image_limit]
     
     # Create ProductImage objects and download/cache all images
-    product_images = await ProductImage.download_all_images(image_urls, product_url)
+    product_images = await ProductImage.download_all_images(image_urls)
+    
+    # Analyze images to generate descriptions for carbon footprint assessment
+    if product_images:
+        print(f"Analyzing {len(product_images)} product images for carbon footprint assessment...")
+        product_images = await create_image_descriptions(product_images, model)
 
     return {
         "product_images": product_images,
@@ -62,9 +72,46 @@ async def page_analysis_phase(state: FootprintState, config: RunnableConfig) -> 
         "short_description": response.short_description,
         "long_description": response.long_description,
         "messages": [
-            {"role": "ai", "content": f"Page analysis complete for {product_url}. Brand: {response.brand}, Category: {response.category}."}
+            {"role": "ai", "content": f"Page analysis complete for {product_url}. Brand: {response.brand}, Category: {response.category}. Analyzed {len(product_images)} images."}
         ]
     }
+
+async def create_image_descriptions(product_images: List[ProductImage], model: str = "low") -> List[ProductImage]:
+    """
+    Analyze downloaded product images to generate detailed descriptions for carbon footprint assessment.
+    
+    Args:
+        product_images: List of ProductImage objects with cached images
+        model: Model configuration to use
+        
+    Returns:
+        Updated ProductImage objects with descriptions
+    """
+    
+    async def analyze_single_image(product_image: ProductImage, index: int) -> ProductImage:
+        try:
+            # Use the image analysis tool
+            description = await analyze_image(
+                product_image, 
+                image_analysis_prompt,
+                model
+            )
+            
+            # Update the ProductImage with the description
+            product_image.description = description
+            print(f"Generated description for image {index + 1}: {description[:100]}...")
+            
+            return product_image
+            
+        except Exception as e:
+            print(f"Error analyzing image {product_image.url}: {e}")
+            return product_image
+    
+    # Process all images concurrently
+    tasks = [analyze_single_image(img, i) for i, img in enumerate(product_images)]
+    analyzed_images = await asyncio.gather(*tasks)
+    
+    return analyzed_images
 
 def hash_url(url: str) -> str:
     return hashlib.blake2s(url.encode(), digest_size=8).hexdigest()

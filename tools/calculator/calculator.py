@@ -4,7 +4,7 @@ from langchain_core.tools import tool
 
 # See https://python.langchain.com/api_reference/langchain/chains/langchain.chains.llm_math.base.LLMMathChain.html
 @tool
-def calculator(expression: str) -> str:
+def calculator_tool(expression: str) -> str:
     """Calculate expression using Python's numexpr library.
 
     Expression should be a single line mathematical expression

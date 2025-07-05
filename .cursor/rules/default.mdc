@@ -1,7 +1,10 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
+
 - Code should work when executed regularly and when executed or called from within a Jupyter notebook.
 - Always consider the root cause of an issue. Don't fix the symptom if you can identify the root of the problem.
+- Don't use check for "except ImportError". Assume libraries are installed correctly and don't waste code space checking for and working around missing libraries.
+- Many libraries use environment variables for API keys. When running code that is missing an API key, load the environment variables in /.env.local

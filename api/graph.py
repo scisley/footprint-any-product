@@ -3,9 +3,8 @@ import asyncio
 import json
 import os
 import re
-from typing import Dict, Any, List, TypedDict
+from typing import Dict, Any, List
 from langgraph.graph import StateGraph, START, END
-from langchain.chat_models import init_chat_model
 
 from agents.state import FootprintState
 from agents.page_analysis import page_analysis_phase # Use the function from agents.page_analysis
