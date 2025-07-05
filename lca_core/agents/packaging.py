@@ -1,13 +1,13 @@
 from pydantic import BaseModel, Field
 from langgraph.prebuilt import create_react_agent
-from tools.calculator.calculator import calculator_tool
-from tools.emissions_factors.emissions_factors import emissions_factor_finder_tool
-from tools.image_analysis.image_analysis import analyze_image_tool
-from tools.research.research import research_tool
+from lca_core.tools.calculator.calculator import calculator_tool
+from lca_core.tools.emissions_factors.emissions_factors import emissions_factor_finder_tool
+from lca_core.tools.image_analysis.image_analysis import analyze_image_tool
+from lca_core.tools.research.research import research_tool
 from .product_image import ProductImage
 from .state import FootprintState
 import logging
-from api.config import MODELS, get_prompt
+from lca_core.utils.config import MODELS, get_prompt
 
 logger = logging.getLogger(__name__)
 

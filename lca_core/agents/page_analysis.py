@@ -9,14 +9,14 @@ from .state import FootprintState
 from .product_image import ProductImage
 from langchain.schema import HumanMessage
 from langchain_core.runnables import RunnableConfig
-from api.config import MODELS, get_prompt
+from lca_core.utils.config import MODELS, get_prompt
 from pydantic import BaseModel, Field
 from langchain_core.messages import SystemMessage, HumanMessage
 import hashlib
-from tools.image_analysis.image_analysis import analyze_image
+from lca_core.tools.image_analysis.image_analysis import analyze_image
 
 # Create cache directory if it doesn't exist
-CACHE_DIR = Path("cache/markdown")
+CACHE_DIR = Path("lca_core/cache/markdown")
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 api_key = os.environ["FIRECRAWL_API_KEY"]

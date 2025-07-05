@@ -2,7 +2,7 @@ import operator
 from typing import Annotated
 from typing_extensions import TypedDict
 from pydantic import BaseModel, Field
-from api.config import get_prompt
+from lca_core.utils.config import get_prompt
 
 class EmissionsFactor(BaseModel):
     """An emissions factor for a given process and phase."""

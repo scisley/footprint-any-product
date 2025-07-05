@@ -19,7 +19,7 @@ class ProductImage(BaseModel):
     description: str = Field(default="", description="AI-generated description of the image for carbon footprint analysis")
     
     # Cache configuration
-    _cache_dir: Path = Path("cache/images")
+    _cache_dir: Path = Path("lca_core/cache/images")
     
     def __init__(self, url: str, description: str = "", **kwargs):
         super().__init__(url=url, description=description, **kwargs)

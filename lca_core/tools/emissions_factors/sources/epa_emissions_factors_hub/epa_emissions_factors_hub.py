@@ -1,10 +1,10 @@
 from typing import Literal
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
-from tools.emissions_factors.state import EFState
+from lca_core.tools.emissions_factors.state import EFState
 from pathlib import Path
-from api.config import get_prompt
-from api import Q_
+from lca_core.utils.config import get_prompt
+from lca_core.utils import Q_
 
 class EPAEmissionsFactor(BaseModel):
     CO2e_factor: float = Field(description="The carbon emissions factor (use -1 if no emissions factor can be found)")

@@ -14,7 +14,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from typing import Tuple
 
-from tools.transportation.transportation import (
+from lca_core.tools.transportation.transportation import (
     validate_iso_country_code,
     get_cache_key,
     get_cached_coordinates,
@@ -74,7 +74,7 @@ class TestCacheOperations:
     
     def test_cache_coordinates(self, temp_cache_dir):
         """Test coordinate caching"""
-        with patch('tools.transportation.transportation.CACHE_DIR', temp_cache_dir):
+        with patch('lca_core.tools.transportation.transportation.CACHE_DIR', temp_cache_dir):
             cache_coordinates("New York", "US", 40.7128, -74.0060, "New York")
             
             # Check if cache file was created
@@ -92,7 +92,7 @@ class TestCacheOperations:
     
     def test_get_cached_coordinates(self, temp_cache_dir):
         """Test retrieving cached coordinates"""
-        with patch('tools.transportation.transportation.CACHE_DIR', temp_cache_dir):
+        with patch('lca_core.tools.transportation.transportation.CACHE_DIR', temp_cache_dir):
             # First cache some coordinates
             cache_coordinates("Paris", "FR", 48.8566, 2.3522)
             
@@ -108,14 +108,14 @@ class TestCacheOperations:
 class TestRateLimiting:
     """Test rate limiting functionality"""
     
-    @patch('tools.transportation.transportation.time')
+    @patch('lca_core.tools.transportation.transportation.time')
     def test_wait_for_rate_limit_no_wait(self, mock_time, reset_rate_limiter):
         """Test rate limiting when enough time has passed"""
         mock_time.time.return_value = 10.0
         mock_time.sleep = Mock()
         
         # Set last call to more than 2 seconds ago
-        import tools.transportation.transportation as transport_module
+        import lca_core.tools.transportation.transportation as transport_module
         transport_module._last_nominatim_call = 7.0  # 3 seconds ago
         
         wait_for_rate_limit()
@@ -124,14 +124,14 @@ class TestRateLimiting:
         mock_time.sleep.assert_not_called()
         assert transport_module._last_nominatim_call == 10.0
     
-    @patch('tools.transportation.transportation.time')
+    @patch('lca_core.tools.transportation.transportation.time')
     def test_wait_for_rate_limit_with_wait(self, mock_time, reset_rate_limiter):
         """Test rate limiting when recent call requires waiting"""
         mock_time.time.return_value = 10.0
         mock_time.sleep = Mock()
         
         # Set last call to 1 second ago
-        import tools.transportation.transportation as transport_module
+        import lca_core.tools.transportation.transportation as transport_module
         transport_module._last_nominatim_call = 9.0  # 1 second ago
         
         wait_for_rate_limit()
@@ -154,7 +154,7 @@ class TestDistanceCalculations:
         distance = calculate_great_circle_distance(40.7128, -74.0060, 40.7128, -74.0060)
         assert distance < 0.001
     
-    @patch('tools.transportation.transportation.searoute')
+    @patch('lca_core.tools.transportation.transportation.searoute')
     @pytest.mark.asyncio
     async def test_calculate_route_distance_ocean(self, mock_searoute):
         """Test ocean freight distance calculation using searoute"""
@@ -199,9 +199,9 @@ class TestDistanceCalculations:
 class TestGeocoding:
     """Test geocoding functions"""
     
-    @patch('tools.transportation.transportation.get_cached_coordinates')
-    @patch('tools.transportation.transportation.wait_for_rate_limit')
-    @patch('tools.transportation.transportation.Nominatim')
+    @patch('lca_core.tools.transportation.transportation.get_cached_coordinates')
+    @patch('lca_core.tools.transportation.transportation.wait_for_rate_limit')
+    @patch('lca_core.tools.transportation.transportation.Nominatim')
     @pytest.mark.asyncio
     async def test_geocode_city_nominatim_success(self, mock_nominatim_class, mock_wait, mock_get_cache, mock_nominatim_location):
         """Test successful Nominatim geocoding"""
@@ -213,14 +213,14 @@ class TestGeocoding:
         mock_geolocator.geocode.return_value = mock_nominatim_location
         mock_nominatim_class.return_value = mock_geolocator
         
-        with patch('tools.transportation.transportation.cache_coordinates') as mock_cache:
+        with patch('lca_core.tools.transportation.transportation.cache_coordinates') as mock_cache:
             result = await geocode_city_nominatim("New York", "US", "New York")
             
             assert result == (40.7128, -74.0060)
             mock_wait.assert_called()
             mock_cache.assert_called_once()
     
-    @patch('tools.transportation.transportation.get_cached_coordinates')
+    @patch('lca_core.tools.transportation.transportation.get_cached_coordinates')
     @pytest.mark.asyncio
     async def test_geocode_city_nominatim_cache_hit(self, mock_get_cache):
         """Test Nominatim geocoding with cache hit"""
@@ -232,7 +232,7 @@ class TestGeocoding:
         assert result == (40.7128, -74.0060)
         # Should not make any API calls
     
-    @patch('tools.transportation.transportation.ChatOpenAI')
+    @patch('lca_core.tools.transportation.transportation.ChatOpenAI')
     @pytest.mark.asyncio
     async def test_geocode_city_llm_fallback(self, mock_openai, mock_llm_response):
         """Test LLM fallback geocoding"""
@@ -241,14 +241,14 @@ class TestGeocoding:
         mock_llm.invoke.return_value = mock_llm_response
         mock_openai.return_value.with_structured_output.return_value = mock_llm
         
-        with patch('tools.transportation.transportation.cache_coordinates') as mock_cache:
+        with patch('lca_core.tools.transportation.transportation.cache_coordinates') as mock_cache:
             result = await geocode_city_llm_fallback("New York", "US", "New York")
             
             assert result == (40.7128, -74.0060)
             mock_cache.assert_called_once()
     
-    @patch('tools.transportation.transportation.geocode_city_nominatim')
-    @patch('tools.transportation.transportation.geocode_city_llm_fallback')
+    @patch('lca_core.tools.transportation.transportation.geocode_city_nominatim')
+    @patch('lca_core.tools.transportation.transportation.geocode_city_llm_fallback')
     @pytest.mark.asyncio
     async def test_geocode_city_success(self, mock_llm_fallback, mock_nominatim):
         """Test main geocode function with Nominatim success"""
@@ -259,8 +259,8 @@ class TestGeocoding:
         assert result == ((40.7128, -74.0060), "nominatim")
         mock_llm_fallback.assert_not_called()
     
-    @patch('tools.transportation.transportation.geocode_city_nominatim')
-    @patch('tools.transportation.transportation.geocode_city_llm_fallback')
+    @patch('lca_core.tools.transportation.transportation.geocode_city_nominatim')
+    @patch('lca_core.tools.transportation.transportation.geocode_city_llm_fallback')
     @pytest.mark.asyncio
     async def test_geocode_city_llm_fallback_used(self, mock_llm_fallback, mock_nominatim):
         """Test main geocode function with LLM fallback"""
@@ -276,7 +276,7 @@ class TestGeocoding:
 class TestLLMIntegration:
     """Test LLM integration functions"""
     
-    @patch('tools.transportation.transportation.ChatOpenAI')
+    @patch('lca_core.tools.transportation.transportation.ChatOpenAI')
     @pytest.mark.asyncio
     async def test_get_transportation_plan_from_llm(self, mock_openai):
         """Test getting transportation plan from LLM"""
@@ -305,10 +305,10 @@ class TestLLMIntegration:
 class TestMainWorkflow:
     """Test main transportation analysis workflow"""
     
-    @patch('tools.transportation.transportation.get_transportation_plan_from_llm')
-    @patch('tools.transportation.transportation.geocode_city')
-    @patch('tools.transportation.transportation.calculate_route_distance')
-    @patch('tools.transportation.transportation.emissions_factor_finder_tool')
+    @patch('lca_core.tools.transportation.transportation.get_transportation_plan_from_llm')
+    @patch('lca_core.tools.transportation.transportation.geocode_city')
+    @patch('lca_core.tools.transportation.transportation.calculate_route_distance')
+    @patch('lca_core.tools.transportation.transportation.emissions_factor_finder_tool')
     @pytest.mark.asyncio
     async def test_analyze_transportation_route(self, mock_emissions, mock_distance, mock_geocode, mock_llm):
         """Test full transportation route analysis"""
@@ -348,7 +348,7 @@ class TestMainWorkflow:
         assert route_detail.mode == "long-haul truck"
         assert route_detail.geocoding_method == "nominatim"
     
-    @patch('tools.transportation.transportation.analyze_transportation_route')
+    @patch('lca_core.tools.transportation.transportation.analyze_transportation_route')
     @pytest.mark.asyncio
     async def test_transportation_tool_success(self, mock_analyze):
         """Test transportation tool wrapper function success"""
@@ -366,7 +366,7 @@ class TestMainWorkflow:
         assert result["total_carbon_emissions_kg_co2e"] == 400.0
         assert result["summary"] == "Test summary"
     
-    @patch('tools.transportation.transportation.analyze_transportation_route')
+    @patch('lca_core.tools.transportation.transportation.analyze_transportation_route')
     @pytest.mark.asyncio
     async def test_transportation_tool_error(self, mock_analyze):
         """Test transportation tool wrapper function error handling"""

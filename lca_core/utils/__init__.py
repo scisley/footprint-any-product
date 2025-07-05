@@ -1,5 +1,5 @@
 from pint import UnitRegistry, set_application_registry
-from api.units import lca_units
+from lca_core.utils.units import lca_units
 
 ureg = UnitRegistry()
 set_application_registry(ureg)
