@@ -1,7 +1,8 @@
 import yaml
-from typing import TypedDict
+from typing_extensions import TypedDict
 from langchain.chat_models import init_chat_model
 from pathlib import Path
+from api.units import lca_units
 
 class ConfigSchema(TypedDict):
     model: str
@@ -19,4 +20,9 @@ with open(_PROMPTS_FILE, 'r') as f:
 def get_prompt(prompt_name: str) -> str:
     if prompt_name not in _prompts_data:
         raise ValueError(f"Prompt {prompt_name} not found in {_PROMPTS_FILE}")
+    
+    if prompt_name == "emssions_factor_units_description":
+        base_prompt = _prompts_data[prompt_name]
+        return base_prompt + "\n" + "\n".join(lca_units)
+
     return _prompts_data[prompt_name]

@@ -1,11 +1,13 @@
 import operator
-from typing import TypedDict, Annotated
+from typing import Annotated
+from typing_extensions import TypedDict
 from pydantic import BaseModel, Field
+from api.config import get_prompt
 
 class EmissionsFactor(BaseModel):
     """An emissions factor for a given process and phase."""
     CO2e_factor: float = Field(description="The carbon emissions factor value.")
-    units: str = Field(description="The carbon emissions factor units (e.g. kgCO2e/kg, kgCO2/square meter, kgCO2e/per mile, etc).")
+    units: str = Field(description=get_prompt("emssions_factor_units_description"))
     description: str = Field(description="A description of the emissions factor. Don't repeat the value, describe it's details.")
     # Can result in hallucinations
     #citation_desc: str = Field(description="A description of the citation")

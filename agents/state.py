@@ -1,4 +1,5 @@
-from typing import Annotated, TypedDict
+from typing import Annotated
+from typing_extensions import TypedDict
 from langgraph.graph import START, END
 from langgraph.graph.message import add_messages
 from pydantic import Field

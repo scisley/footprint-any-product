@@ -16,72 +16,55 @@ class ProductImage(BaseModel):
     External code should always use the original URL for references.
     """
     url: str = Field(description="Original image URL from the website")
-    description: str = Field(default="", description="Description of the image")
+    description: str = Field(default="", description="AI-generated description of the image for carbon footprint analysis")
     
     # Cache configuration
-    _cache_dir: Path = Path("cache/markdown")
+    _cache_dir: Path = Path("cache/images")
     
     def __init__(self, url: str, description: str = "", **kwargs):
         super().__init__(url=url, description=description, **kwargs)
         # Ensure cache directory exists
         self._cache_dir.mkdir(parents=True, exist_ok=True)
     
-    def _get_cache_info(self, base_url: str, index: int) -> tuple[Path, str]:
-        """Get cache directory and filename for this image."""
-        hashed_url = hashlib.blake2s(base_url.encode(), digest_size=8).hexdigest()
-        cache_subdir = self._cache_dir / hashed_url
-        cache_subdir.mkdir(parents=True, exist_ok=True)
-        
-        # Get file extension from URL
+    def _get_cache_path(self) -> Path:
+        """Get cache path based on image URL hash."""
+        url_hash = hashlib.blake2s(self.url.encode(), digest_size=16).hexdigest()
         parsed_url = urlparse(self.url)
         ext = os.path.splitext(parsed_url.path)[1] or '.jpg'
-        
-        image_hash = f"{hashed_url}_img_{index}"
-        cache_filename = f"{image_hash}{ext}"
-        
-        return cache_subdir, cache_filename
+        return self._cache_dir / f"{url_hash}{ext}"
     
-    def _find_cached_file(self, base_url: str, index: int) -> Optional[Path]:
+    def _find_cached_file(self) -> Optional[Path]:
         """Find cached file if it exists."""
-        cache_subdir, expected_filename = self._get_cache_info(base_url, index)
-        cache_path = cache_subdir / expected_filename
-        
+        cache_path = self._get_cache_path()
         if cache_path.exists():
             return cache_path
         
         # Also check for any file with the same hash prefix (in case extension was different)
-        hashed_url = hashlib.blake2s(base_url.encode(), digest_size=8).hexdigest()
-        image_hash = f"{hashed_url}_img_{index}"
-        
-        for cache_file in cache_subdir.glob(f"{image_hash}.*"):
+        url_hash = hashlib.blake2s(self.url.encode(), digest_size=16).hexdigest()
+        for cache_file in self._cache_dir.glob(f"{url_hash}.*"):
             return cache_file
         
         return None
     
-    def is_cached(self, base_url: str, index: int) -> bool:
+    def is_cached(self) -> bool:
         """Check if this image is already cached."""
-        return self._find_cached_file(base_url, index) is not None
+        return self._find_cached_file() is not None
     
-    async def get_image_path(self, base_url: str, index: int) -> str:
+    async def get_image_path(self) -> str:
         """
         Get the path to the image file, downloading and caching if necessary.
         
-        Args:
-            base_url: The base URL of the page (used for cache organization)
-            index: The index of this image in the page's image list
-            
         Returns:
             Path to the local image file (cached or original URL if download fails)
         """
         # Check if already cached
-        cached_file = self._find_cached_file(base_url, index)
+        cached_file = self._find_cached_file()
         if cached_file:
             print(f"Using cached image {self.url}, {cached_file}")
             return str(cached_file)
         
         # Download and cache
-        cache_subdir, cache_filename = self._get_cache_info(base_url, index)
-        cache_path = cache_subdir / cache_filename
+        cache_path = self._get_cache_path()
         
         try:
             async with aiohttp.ClientSession() as session:
@@ -97,18 +80,14 @@ class ProductImage(BaseModel):
             print(f"Error downloading image {self.url}: {e}")
             return self.url
     
-    async def get_image_data(self, base_url: str, index: int) -> Optional[bytes]:
+    async def get_image_data(self) -> Optional[bytes]:
         """
         Get the raw image data, downloading and caching if necessary.
         
-        Args:
-            base_url: The base URL of the page (used for cache organization)
-            index: The index of this image in the page's image list
-            
         Returns:
             Image data as bytes, or None if unable to fetch
         """
-        image_path = await self.get_image_path(base_url, index)
+        image_path = await self.get_image_path()
         
         # If we got back the original URL, it means download failed
         if image_path == self.url:
@@ -129,13 +108,24 @@ class ProductImage(BaseModel):
         }
     
     @classmethod
-    async def download_all_images(cls, image_urls: list[str], base_url: str, descriptions: Optional[list[str]] = None) -> list['ProductImage']:
+    def format_images_for_prompt(cls, state: dict) -> str:
+        """
+        Format images for a prompt.
+        """
+        image_context = ""
+        if state.get("product_images"):
+            image_context = "\n\nAvailable Images:\n"
+            for i, img in enumerate(state["product_images"]):
+                image_context += f"Image {i+1}: {img.url}\nDescription: {img.description}\n\n"
+        return image_context
+    
+    @classmethod
+    async def download_all_images(cls, image_urls: list[str], descriptions: Optional[list[str]] = None) -> list['ProductImage']:
         """
         Create ProductImage objects and download/cache all images concurrently.
         
         Args:
             image_urls: List of original image URLs
-            base_url: Base URL of the page
             descriptions: Optional list of descriptions (defaults to empty strings)
             
         Returns:
@@ -148,7 +138,7 @@ class ProductImage(BaseModel):
         images = [cls(url=url, description=desc) for url, desc in zip(image_urls, descriptions)]
         
         # Download all images concurrently
-        tasks = [img.get_image_path(base_url, i) for i, img in enumerate(images)]
+        tasks = [img.get_image_path() for img in images]
         await asyncio.gather(*tasks)
         
         return images

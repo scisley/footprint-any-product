@@ -39,6 +39,19 @@ def source_picker(state:EFState):
 
     return {"emissions_factor": valid_candidates[response.best_index]}
 
+@tool
+def emissions_factor_finder_tool(process_desc: str, phase: str) -> float:
+    """Given a process and phase, returns the most appropriate emissions factor."""
+    print(f"TOOL: Emissions Factor Finder {process_desc} {phase}")
+
+    response = ef_graph.invoke({"process_desc": process_desc, "phase": phase})
+
+    return response["emissions_factor"]
+
+# ********************************************************
+# Build the graph
+# ********************************************************
+
 builder = StateGraph(EFState)
 builder.add_node(source_picker)
 sources = [
@@ -55,17 +68,7 @@ for name, source in named_sources.items():
 # Fan in
 builder.add_edge(named_sources.keys(), "source_picker")
 builder.add_edge("source_picker", END)
-
 ef_graph = builder.compile()
-
-@tool
-def emissions_factor_finder_tool(process_desc: str, phase: str) -> float:
-    """Given a process and phase, returns the most appropriate emissions factor."""
-    print(f"TOOL: Emissions Factor Finder {process_desc} {phase}")
-
-    response = ef_graph.invoke({"process_desc": process_desc, "phase": phase})
-
-    return response["emissions_factor"]
 
 # Test call
 #emissions_factor_finder("LCD display for a cell phone", "manufacturing")

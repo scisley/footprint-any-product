@@ -3,10 +3,12 @@ from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from tools.emissions_factors.state import EFState
 from pathlib import Path
+from api.config import get_prompt
+from api import Q_
 
 class EPAEmissionsFactor(BaseModel):
     CO2e_factor: float = Field(description="The carbon emissions factor (use -1 if no emissions factor can be found)")
-    units: Literal["kgCO2/vehicle-mile", "kgCO2/short ton-mile", "kgCO2/mmBtu", "kgCO2/gallon", "kgCO2/scf", "lbCO2/MWh", "Metric Tons CO2e / Short Ton", "N/A"] = Field(description="The units associated with the carbon emissions factor (use N/A if no appropriate emissions factor can be found)")
+    units: Literal["kgCO2/vehicle_mile", "kgCO2/(short_ton*mile)", "kgCO2/mmBtu", "kgCO2/gallon", "kgCO2/scf", "lbCO2/MWh", "tCO2e / short_ton", "kgCO2 / passenger_mile", "N/A"] = Field(description=get_prompt("emssions_factor_units_description"))
     description: str = Field(description="Details about the emissions factor")
 
 def epa_ef_finder(state:EFState):
@@ -18,7 +20,6 @@ def epa_ef_finder(state:EFState):
         temperature=0,
     ).with_structured_output(EPAEmissionsFactor)
     
-    # TODO: Move to yaml file
     base_sys_prompt = """
     You are an expert at identifying the most appropriate emission factor given
     a process description and phase (e.g. manufacturing, transportation, etc).
@@ -43,20 +44,23 @@ def epa_ef_finder(state:EFState):
     ])
 
     # Convert units to standardized form (e.g kgCO2/kWh)
-    converted = response.model_dump()
-    if converted["units"] == "lbCO2/MWh":
-        converted["CO2e_factor"] = converted["CO2e_factor"] * 0.453592/1000
-        converted["units"] = "kgCO2/kWh"
-    elif converted["units"] == "kgCO2/mmBtu":
-        converted["CO2e_factor"] = converted["CO2e_factor"] * 0.003412
-        converted["units"] = "kgCO2/kWh"
-    elif converted["units"] == "kgCO2/short ton-mile":
-        converted["CO2e_factor"] = converted["CO2e_factor"] * 1.1023
-        converted["units"] = "kgCO2/tonne-mile"
+    units = response.units
+    CO2e_factor = response.CO2e_factor
+    if units == "lbCO2/MWh":
+        CO2e_factor = Q_(CO2e_factor, units).to("kgCO2/kWh").magnitude
+        units = "kgCO2/kWh"
+    elif units == "kgCO2/mmBtu":
+        CO2e_factor = Q_(CO2e_factor, units).to("kgCO2/kWh").magnitude
+        units = "kgCO2/kWh"
+    elif units == "kgCO2/(short_ton*mile)":
+        CO2e_factor = Q_(CO2e_factor, units).to("kgCO2/(tonne*km)").magnitude
+        units = "kgCO2/(tonne*km)"
 
     return {
         "ef_candidates": [{
-            **converted,
+            "CO2e_factor": CO2e_factor,
+            "units": units,
+            "description": response.description,
             "citation_desc": "The 2025 annual update of the Emission Factors Hub (January 2025)",
             "citation_url": "https://www.epa.gov/climateleadership/ghg-emission-factors-hub"
         }]
